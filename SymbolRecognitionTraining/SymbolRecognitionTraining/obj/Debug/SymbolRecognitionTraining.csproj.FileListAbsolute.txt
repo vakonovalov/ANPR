@@ -1,0 +1,1 @@
+c:\users\aeronet\documents\visual studio 2013\Projects\SymbolRecognitionTraining\SymbolRecognitionTraining\bin\Debug\SymbolRecognitionTraining.exe.config
