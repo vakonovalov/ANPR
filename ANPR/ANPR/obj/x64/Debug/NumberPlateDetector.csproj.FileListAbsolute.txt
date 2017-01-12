@@ -1,0 +1,17 @@
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Debug\NumberPlateDetector.exe.config
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Debug\cvextern.dll
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Debug\opencv_ffmpeg310_64.dll
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Debug\NumberPlateDetector.exe
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Debug\NumberPlateDetector.pdb
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Debug\Accord.dll
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Debug\Accord.Imaging.dll
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Debug\Accord.MachineLearning.dll
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Debug\Accord.Statistics.dll
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Debug\Emgu.CV.UI.dll
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Debug\Emgu.CV.World.dll
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\obj\x64\Debug\NumberPlateDetector.csprojResolveAssemblyReference.cache
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\obj\x64\Debug\NumberPlateDetector.Form1.resources
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\obj\x64\Debug\NumberPlateDetector.Properties.Resources.resources
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\obj\x64\Debug\NumberPlateDetector.csproj.GenerateResource.Cache
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\obj\x64\Debug\NumberPlateDetector.exe
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\obj\x64\Debug\NumberPlateDetector.pdb

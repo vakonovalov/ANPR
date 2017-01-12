@@ -1,0 +1,23 @@
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Release\NumberPlateDetector.exe.config
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Release\cvextern.dll
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Release\opencv_ffmpeg310_64.dll
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Release\NumberPlateDetector.exe
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Release\NumberPlateDetector.pdb
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Release\Accord.dll
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Release\Accord.Imaging.dll
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Release\Accord.MachineLearning.dll
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Release\Accord.Statistics.dll
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Release\Emgu.CV.UI.dll
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Release\Emgu.CV.World.dll
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\obj\x64\Release\NumberPlateDetector.Form1.resources
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\obj\x64\Release\NumberPlateDetector.Properties.Resources.resources
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\obj\x64\Release\NumberPlateDetector.csproj.GenerateResource.Cache
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\obj\x64\Release\NumberPlateDetector.exe
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\obj\x64\Release\NumberPlateDetector.pdb
+S:\Проекты\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\obj\x64\Release\NumberPlateDetector.csprojResolveAssemblyReference.cache
+S:\projects\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Release\NumberPlateDetector.exe.config
+S:\projects\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\obj\x64\Release\NumberPlateDetector.exe
+S:\projects\Aeronet\work source\ANPR\NumberPlateDetector\NumberPlateDetector\obj\x64\Release\NumberPlateDetector.pdb
+C:\Users\aeronet\Desktop\project\ANPR\NumberPlateDetector\NumberPlateDetector\bin\x64\Release\NumberPlateDetector.exe.config
+C:\Users\aeronet\Desktop\project\ANPR\NumberPlateDetector\NumberPlateDetector\obj\x64\Release\NumberPlateDetector.exe
+C:\Users\aeronet\Desktop\project\ANPR\NumberPlateDetector\NumberPlateDetector\obj\x64\Release\NumberPlateDetector.pdb
