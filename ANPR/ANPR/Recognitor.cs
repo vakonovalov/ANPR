@@ -14,7 +14,6 @@ using Emgu.CV.CvEnum;
 using Emgu.CV.Util;
 using Emgu.CV.UI;
 using System.Threading;
-
 using System.Drawing.Imaging;
 using Accord.MachineLearning.VectorMachines;
 using Accord.MachineLearning.VectorMachines.Learning;
@@ -30,6 +29,7 @@ namespace NumberPlateDetector
         private Capture capture; //Камера
         String cascadeFileName; //Каскад детектора
         CascadeClassifier cascadeClassifier; //Каскад
+        Thread thread;
 
         public Recognitor()
         {
@@ -62,8 +62,12 @@ namespace NumberPlateDetector
                 {
                     capture = new Capture();
                 }
-                capture.ImageGrabbed += ProcessFrame;
+
+                capture.ImageGrabbed += processFrame;
                 capture.Start();
+
+                //thread = new Thread(new ParameterizedThreadStart(worker));
+
             }
             catch (Exception e)
             {
@@ -72,78 +76,121 @@ namespace NumberPlateDetector
             }
         }
 
-        //Процедура обработки видео и поика таблички с номером
-        public void ProcessFrame(object sender, EventArgs e)
+        public void worker(dynamic frame)
         {
-            Emgu.CV.UI.ImageBox VideoImage = MemBox.getStreamBox();
-            Emgu.CV.UI.ImageBox crop = MemBox.getCropBox();
+            frame = (Image<Bgr, Byte>)frame;
             Mat mat = new Mat();
             Image<Bgr, Byte> ROI_frame;
-            Image<Bgr, Byte> crop_frame;
-            capture.Retrieve(mat); //Полученный кадр
-            Image<Bgr, Byte> frame = mat.ToImage<Bgr, Byte>();
+            //capture.Retrieve(mat); //Полученный кадр
+            frame = mat.ToImage<Bgr, Byte>();
             //frame = frame.Resize(0.3, Inter.Cubic);
             //Хаар работает с ЧБ изображением
             //Детектируем
             Rectangle[] facesDetected2;
-            if (ii < 10)
-            {
-                ii++;
-            }
-            else
-            {
+           // if (ii < 10)
+          //  {
+           //     ii++;
+           // }
+            //else
+           // {
+               // ii = 0;
                 facesDetected2 = cascadeClassifier.DetectMultiScale(
                                    frame.Convert<Gray, Byte>(), //Исходное изображение
                                    1.1,  //Коэффициент увеличения изображения
                                    5,   //Группировка предварительно обнаруженных событий. Чем их меньше, тем больше ложных тревог
                                    new Size(15, 15), //Минимальный размер
                     //new Size(200, 200));
-                                   new Size(200, 200)); //Максимальный размер
+                                   new Size(600, 600)); //Максимальный размер
                 //Выводим всё найденное
                 //MSER
                 ROI_frame = frame;
 
-
-                //foreach (Rectangle f in facesDetected2)
                 for (int i = 0; i < facesDetected2.Length; i++)
                 {
 
                     ROI_frame = frame.Copy(facesDetected2[i]);
                     frame.Draw(facesDetected2[i], new Bgr(Color.Blue), 2);
-                    crop_frame = PlateRotation(ROI_frame);
-                    crop.Image = ROI_frame;
+                    Image<Bgr, Byte> rotateImg = rotationPlate(ROI_frame);
+                    Image<Bgr, Byte> normImg = normalizePlate(rotateImg);
+
                     //MulticlassSupportVectorMachine machine = MulticlassSupportVectorMachine.Load("MachineForSymbol.machineforsymbol");
                     //int output = machine.Compute(BitmapToDouble(ROI_frame.ToBitmap()).ToArray());
-                    ii = 0;
+
                 }
 
-            }
+            //}
             //            MulticlassSupportVectorMachine machine = MulticlassSupportVectorMachine.Load("MachineForSymbol");
             //            double[] input = BitmapToDouble(ROI_frame.ToBitmap()).ToArray();
             //            int output = machine.Compute(input);
-            VideoImage.Image = frame;
-            if (MemBox.getState() != 1) return;
+          //  VideoImage.Image = frame;
+         //   if (MemBox.getState() != 1) return;
         }
 
-         Image<Bgr, byte> PlateRotation(Image<Bgr, byte> image)
+        //Процедура обработки видео и поика таблички с номером
+        public void processFrame(object sender, EventArgs e)
         {
             Emgu.CV.UI.ImageBox VideoImage = MemBox.getStreamBox();
+            Emgu.CV.UI.ImageBox crop = MemBox.getCropBox();
+            Mat mat = new Mat();
+            Image<Bgr, Byte> ROI_frame;
+            capture.Retrieve(mat); //Полученный кадр
+            Image<Bgr, Byte> frame = mat.ToImage<Bgr, Byte>();
+
+            //if (thread.ThreadState != ThreadState.Running) 
+            //{
+            //    thread.Start(frame);
+           // }
+
+            MemBox.getStreamBox().Image = frame;
+        }
+
+        Image<Bgr, byte> rotationPlate(Image<Bgr, byte> image)
+        {
             Image<Gray, Byte> sobel_frame;
             Image<Gray, Byte> gray_image = image.Convert<Gray, Byte>();
 
             gray_image._EqualizeHist();
-            sobel_frame = gray_image.Sobel(0, 1, 3).AbsDiff(new Gray(0.0)).Convert<Gray, Byte>();//.AbsDiff(new Gray(0.0));
-            VideoImage.Image = sobel_frame;
-           // sobel_frame = gray_image.Sobel(0, 1, 3).Add(gray_image.Sobel(1, 0, 3)).AbsDiff(new Gray(0.0)).Convert<Gray, Byte>();//.ThresholdBinary(new Gray(10.0), new Gray(255.0));
-           // sobel_frame = sobel_frame.ThresholdAdaptive(new Gray(255.0), AdaptiveThresholdType.GaussianC, ThresholdType.Binary, 31, new Gray(-50.0));
-              //sobel_frame = sobel_frame.ThresholdAdaptive(new Gray(255.0), AdaptiveThresholdType.MeanC, ThresholdType.Binary, 31, new Gray(-30.0));
+            sobel_frame = gray_image;
 
-           // VideoImage.Image = sobel_frame;
-            //CvInvoke.WaitKey();
 
+            Matrix<byte> kernelNoizeV = new Matrix<byte>(new Byte[5, 5] {   { 0, 0, 0, 0, 0 }, 
+                                                                            { 0, 0, 0, 0, 0 }, 
+                                                                            { 0, 1, 1, 1, 0 },
+                                                                            { 0, 0, 0, 0, 0 },
+                                                                            { 0, 0, 0, 0, 0 }});
+
+            Matrix<byte> kernelNoizeH = new Matrix<byte>(new Byte[5, 5] {   { 0, 0, 0, 0, 0 }, 
+                                                                            { 0, 0, 1, 0, 0 }, 
+                                                                            { 0, 0, 1, 0, 0 },
+                                                                            { 0, 0, 1, 0, 0 },
+                                                                            { 0, 0, 0, 0, 0 }});
+
+
+            Matrix<byte> kernel = new Matrix<byte>(new Byte[7, 7] {   { 0, 0, 0, 0, 0, 0, 0 }, 
+                                                                      { 0, 0, 0, 0, 0, 0, 0 }, 
+                                                                      { 0, 0, 1, 1, 1, 0, 0 }, 
+                                                                      { 0, 0, 1, 1, 1, 0, 0 }, 
+                                                                      { 0, 0, 1, 1, 1, 0, 0 }, 
+                                                                      { 0, 0, 0, 0, 0, 0, 0 }, 
+                                                                      { 0, 0, 0, 0, 0, 0, 0 }});
+
+            sobel_frame = sobel_frame.SmoothGaussian(3);
+            //Морфологическое открытие
+            sobel_frame = sobel_frame.MorphologyEx(MorphOp.Open, kernel, new Point(-1, -1), 1, BorderType.Default, new MCvScalar());
+            sobel_frame = sobel_frame.MorphologyEx(MorphOp.Erode, kernel, new Point(-1, -1), 1, BorderType.Default, new MCvScalar());
+
+            MemBox.getPr1Box().Image = sobel_frame;
+
+            //Оператор Собеля
+            sobel_frame = sobel_frame.ThresholdAdaptive(new Gray(255.0), AdaptiveThresholdType.GaussianC, ThresholdType.Binary, 31, new Gray(-10.0));
+
+            sobel_frame = sobel_frame.MorphologyEx(MorphOp.Close, kernel, new Point(-1, -1), 1, BorderType.Default, new MCvScalar());
+
+            MemBox.getPr2Box().Image = sobel_frame;
 
             LineSegment2D[] lines = null;
-            lines = sobel_frame.HoughLinesBinary(1, Math.PI / 180, image.Width / 5, image.Width / 2, 5)[0];
+            /*ВЫделение горизонтальных прямых (widthLine >= 0/5*imageLine)*/
+            lines = sobel_frame.HoughLinesBinary(1, Math.PI / 200, image.Width / 2, image.Width / 2, 5)[0];
             if (lines != null && lines.Length > 0)
             {
                 double angle = 0;
@@ -153,8 +200,6 @@ namespace NumberPlateDetector
                     avr.P1 = new Point(avr.P1.X + seg.P1.X, avr.P1.Y + seg.P1.Y);
                     avr.P2 = new Point(avr.P2.X + seg.P2.X, avr.P2.Y + seg.P2.Y);
                     //image.Draw(seg, new Bgr(255, 0, 0), 1);
-                    //VideoImage.Image = image;
-                    //CvInvoke.WaitKey();
                 }
                 avr.P1 = new Point(avr.P1.X / lines.Length, avr.P1.Y / lines.Length);
                 avr.P2 = new Point(avr.P2.X / lines.Length, avr.P2.Y / lines.Length);
@@ -167,10 +212,21 @@ namespace NumberPlateDetector
                 double a = Math.Abs(horizontal.P2.Y - avr.P2.Y);
                 double b = Math.Sqrt(c * c + a * a);
                 angle = (a / b * (180 / Math.PI)) * (horizontal.P2.Y > avr.P2.Y ? 1 : -1);
+               // MemBox.getAngle().Text = Convert.ToString(Math.Round(angle, 3));
                 image = image.Rotate(angle, new Bgr(0, 0, 0));
+                MemBox.getCropBox().Image = image;
             }
             return image;
         }
+
+        Image<Bgr, byte> normalizePlate(Image<Bgr, byte> image)
+        {
+            Image<Bgr, Byte> img = image;
+            MemBox.getNormBox().Image = img; 
+
+            return  img;
+        }
+
 
         private static List<double> BitmapToDouble(Bitmap bmp)
         {

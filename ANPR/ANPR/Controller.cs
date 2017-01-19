@@ -20,8 +20,8 @@ namespace ANPR
             analyzer = new Analyzer();
         }
 
-        private bool changeDronePosition();
+        //private bool changeDronePosition();
         
-        public bool setModuleParameters (string module, List<Tuple<String,Object>> parameters);
+       // public bool setModuleParameters (string module, List<Tuple<String,Object>> parameters);
     }
 }

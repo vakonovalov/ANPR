@@ -14,7 +14,6 @@ using Emgu.CV.CvEnum;
 using Emgu.CV.Util;
 using Emgu.CV.UI;
 using System.Threading;
-
 using System.Drawing.Imaging;
 using Accord.MachineLearning.VectorMachines;
 using Accord.MachineLearning.VectorMachines.Learning;
@@ -37,7 +36,15 @@ namespace NumberPlateDetector
         {
             MemBox.setStreamBox(VideoImage);
             MemBox.setCropBox(crop);
-            MemBox.setSymBox(symbols);           
+            MemBox.setPr1Box(pr1);
+            MemBox.setPr2Box(pr2);
+            textBox1.Text = "dasdasd";
+            MemBox.setAngle(textBox1);
+            MemBox.setNormBox(normBox);
+            MemBox.setNr1Box(nr1Box);
+            MemBox.setNr1Box(nr2Box);
+            MemBox.setSymBox(symbols);
+
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -52,7 +59,9 @@ namespace NumberPlateDetector
             MemBox.setState(0);
         }
 
-
-
+        private void label4_Click(object sender, EventArgs e) 
+        {
+        
+        }
     }
 }

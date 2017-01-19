@@ -29,7 +29,7 @@ namespace ANPR
             return parameters.Keys.ToList();   
         }
 
-        public virtual void run();
+       // public virtual void run();
 
         public dynamic getParameter(String name)
         { 

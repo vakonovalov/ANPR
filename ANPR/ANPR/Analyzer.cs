@@ -33,8 +33,8 @@ namespace ANPR
             this.plateRecognizer = plateRec;
         }
 
-        public CarDetectorRetStatus checkDetectorData();
+        //public CarDetectorRetStatus checkDetectorData();
 
-        public PlateRecognizerRetStatus checkRecognizerDate();
+        //public PlateRecognizerRetStatus checkRecognizerDate();
     }
 }
