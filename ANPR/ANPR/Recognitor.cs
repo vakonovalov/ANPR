@@ -18,6 +18,18 @@ using System.Drawing.Imaging;
 using Accord.MachineLearning.VectorMachines;
 using Accord.MachineLearning.VectorMachines.Learning;
 //using Accord.Statistics.Kernels;
+using FANNCSharp;
+#if FANN_FIXED
+using FANNCSharp.Fixed;
+using DataType = System.Int32;
+#elif FANN_DOUBLE
+using FANNCSharp.Double;
+using DataType = System.Double;
+#else
+using FANNCSharp.Float;
+using DataType = System.Single;
+#endif
+//using FANN.Net;
 using AForge.Imaging;
 using AForge.Imaging.Filters;
 
@@ -25,16 +37,18 @@ namespace NumberPlateDetector
 {
     class Recognitor
     {
-        int ii = 5;
+        private int framePass = 20;
+        private int frameCounter = 1;
         private Capture capture; //Камера
-        String cascadeFileName; //Каскад детектора
-        CascadeClassifier cascadeClassifier; //Каскад
-        Thread thread;
+        private CascadeClassifier cascadeClassifier;
+        public delegate void workerPointer(Image<Bgr, Byte> data);
+        public event workerPointer dataReceive;
+        private Thread workThread;
+        private static Mutex mut = new Mutex();
 
         public Recognitor()
         {
-            cascadeFileName = "cascade.xml";
-            cascadeClassifier = new CascadeClassifier(cascadeFileName); //Каскад
+            cascadeClassifier = new CascadeClassifier("./cascade.xml"); //Каскад
         }
 
         public void Run()
@@ -64,10 +78,8 @@ namespace NumberPlateDetector
                 }
 
                 capture.ImageGrabbed += processFrame;
+                dataReceive += dataHandler;
                 capture.Start();
-
-                //thread = new Thread(new ParameterizedThreadStart(worker));
-
             }
             catch (Exception e)
             {
@@ -76,71 +88,81 @@ namespace NumberPlateDetector
             }
         }
 
+        protected virtual void dataHandler(Image<Bgr, Byte> data)
+        {
+            ThreadPool.QueueUserWorkItem(new WaitCallback(worker), data);
+            //worker(data);
+        }
+
         public void worker(dynamic frame)
         {
-            frame = (Image<Bgr, Byte>)frame;
-            Mat mat = new Mat();
+            frame = (Image<Bgr, Byte>) frame;
             Image<Bgr, Byte> ROI_frame;
+            Image<Bgr, Byte> origFrame;
+            origFrame = (Image<Bgr, Byte>) frame.Clone();// new Image<Bgr, Byte>(frame);
+
             //capture.Retrieve(mat); //Полученный кадр
-            frame = mat.ToImage<Bgr, Byte>();
+            //frame = mat.ToImage<Bgr, Byte>();
             //frame = frame.Resize(0.3, Inter.Cubic);
             //Хаар работает с ЧБ изображением
             //Детектируем
             Rectangle[] facesDetected2;
-           // if (ii < 10)
-          //  {
-           //     ii++;
-           // }
-            //else
-           // {
-               // ii = 0;
-                facesDetected2 = cascadeClassifier.DetectMultiScale(
-                                   frame.Convert<Gray, Byte>(), //Исходное изображение
-                                   1.1,  //Коэффициент увеличения изображения
-                                   5,   //Группировка предварительно обнаруженных событий. Чем их меньше, тем больше ложных тревог
-                                   new Size(15, 15), //Минимальный размер
-                    //new Size(200, 200));
-                                   new Size(600, 600)); //Максимальный размер
-                //Выводим всё найденное
-                //MSER
-                ROI_frame = frame;
 
-                for (int i = 0; i < facesDetected2.Length; i++)
-                {
+            mut.WaitOne();
+            facesDetected2 = cascadeClassifier.DetectMultiScale(
+                           origFrame.Convert<Gray, Byte>(), //Исходное изображение
+                           1.1,  //Коэффициент увеличения изображения
+                           5,   //Группировка предварительно обнаруженных событий. Чем их меньше, тем больше ложных тревог
+                           new Size(15, 15), //Минимальный размер
+                           new Size(200, 200)); //Максимальный 
+            mut.ReleaseMutex();
+            //Выводим всё найденное
+            //MSER
+            ROI_frame = origFrame;
 
-                    ROI_frame = frame.Copy(facesDetected2[i]);
-                    frame.Draw(facesDetected2[i], new Bgr(Color.Blue), 2);
-                    Image<Bgr, Byte> rotateImg = rotationPlate(ROI_frame);
-                    Image<Bgr, Byte> normImg = normalizePlate(rotateImg);
+            for (int i = 0; i < facesDetected2.Length; i++)
+            {
 
-                    //MulticlassSupportVectorMachine machine = MulticlassSupportVectorMachine.Load("MachineForSymbol.machineforsymbol");
-                    //int output = machine.Compute(BitmapToDouble(ROI_frame.ToBitmap()).ToArray());
+                ROI_frame = origFrame.Copy(facesDetected2[i]);
+                origFrame.Draw(facesDetected2[i], new Bgr(Color.Blue), 2);
+                Image<Bgr, Byte> rotateImg = rotationPlate(ROI_frame);
+                Image<Bgr, Byte> normImg = normalizePlate(rotateImg);
 
-                }
+                //MulticlassSupportVectorMachine machine = MulticlassSupportVectorMachine.Load("MachineForSymbol.machineforsymbol");
+                //int output = machine.Compute(BitmapToDouble(ROI_frame.ToBitmap()).ToArray());
 
-            //}
+            }
+
             //            MulticlassSupportVectorMachine machine = MulticlassSupportVectorMachine.Load("MachineForSymbol");
             //            double[] input = BitmapToDouble(ROI_frame.ToBitmap()).ToArray();
             //            int output = machine.Compute(input);
-          //  VideoImage.Image = frame;
-         //   if (MemBox.getState() != 1) return;
         }
 
-        //Процедура обработки видео и поика таблички с номером
+        public void threadWorker()
+        {
+            while (true)
+            {
+               // while (dataReceive);
+
+            }
+        }
+
+        //Процедура обработки кадров
         public void processFrame(object sender, EventArgs e)
         {
             Emgu.CV.UI.ImageBox VideoImage = MemBox.getStreamBox();
             Emgu.CV.UI.ImageBox crop = MemBox.getCropBox();
             Mat mat = new Mat();
-            Image<Bgr, Byte> ROI_frame;
             capture.Retrieve(mat); //Полученный кадр
             Image<Bgr, Byte> frame = mat.ToImage<Bgr, Byte>();
+            if (frameCounter % framePass == 0)
+            {
+                Image<Bgr, Byte> cl = frame.Clone();
+                dataHandler(cl);
+                frameCounter = 1;
+            }
 
-            //if (thread.ThreadState != ThreadState.Running) 
-            //{
-            //    thread.Start(frame);
-           // }
-
+            frameCounter++;
             MemBox.getStreamBox().Image = frame;
         }
 
@@ -212,7 +234,7 @@ namespace NumberPlateDetector
                 double a = Math.Abs(horizontal.P2.Y - avr.P2.Y);
                 double b = Math.Sqrt(c * c + a * a);
                 angle = (a / b * (180 / Math.PI)) * (horizontal.P2.Y > avr.P2.Y ? 1 : -1);
-               // MemBox.getAngle().Text = Convert.ToString(Math.Round(angle, 3));
+                // MemBox.getAngle().Text = Convert.ToString(Math.Round(angle, 3));
                 image = image.Rotate(angle, new Bgr(0, 0, 0));
                 MemBox.getCropBox().Image = image;
             }
@@ -222,11 +244,10 @@ namespace NumberPlateDetector
         Image<Bgr, byte> normalizePlate(Image<Bgr, byte> image)
         {
             Image<Bgr, Byte> img = image;
-            MemBox.getNormBox().Image = img; 
+            MemBox.getNormBox().Image = img;
 
-            return  img;
+            return img;
         }
-
 
         private static List<double> BitmapToDouble(Bitmap bmp)
         {

@@ -38,7 +38,6 @@ namespace NumberPlateDetector
             MemBox.setCropBox(crop);
             MemBox.setPr1Box(pr1);
             MemBox.setPr2Box(pr2);
-            textBox1.Text = "dasdasd";
             MemBox.setAngle(textBox1);
             MemBox.setNormBox(normBox);
             MemBox.setNr1Box(nr1Box);
