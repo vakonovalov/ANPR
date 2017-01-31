@@ -16,3 +16,4 @@ C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x86\Release\ANPR.Properties
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x86\Release\ANPR.csproj.GenerateResource.Cache
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x86\Release\ANPR.exe
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x86\Release\ANPR.pdb
+C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x86\Release\ANPR.csprojResolveAssemblyReference.cache

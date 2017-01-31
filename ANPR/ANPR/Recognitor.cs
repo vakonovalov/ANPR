@@ -29,7 +29,6 @@ using DataType = System.Double;
 using FANNCSharp.Float;
 using DataType = System.Single;
 #endif
-//using FANN.Net;
 using AForge.Imaging;
 using AForge.Imaging.Filters;
 
@@ -37,14 +36,18 @@ namespace NumberPlateDetector
 {
     class Recognitor
     {
-        private int framePass = 20;
+        private int framePass = 30;
         private int frameCounter = 1;
-        private Capture capture; //Камера
+        private Capture capture; 
         private CascadeClassifier cascadeClassifier;
         public delegate void workerPointer(Image<Bgr, Byte> data);
         public event workerPointer dataReceive;
         private Thread workThread;
-        private static Mutex mut = new Mutex();
+        private Image<Bgr, Byte> frame;
+        private Image<Bgr, Byte> frameClone;
+        private static bool flag = false;
+
+        private  Image<Bgr, Byte> con = new Image<Bgr,byte>("C:/Users/aeronet/Desktop/sampleСars/112.bmp");
 
         public Recognitor()
         {
@@ -80,6 +83,8 @@ namespace NumberPlateDetector
                 capture.ImageGrabbed += processFrame;
                 dataReceive += dataHandler;
                 capture.Start();
+                workThread = new Thread(threadWorker);
+                workThread.Start();
             }
             catch (Exception e)
             {
@@ -89,40 +94,70 @@ namespace NumberPlateDetector
         }
 
         protected virtual void dataHandler(Image<Bgr, Byte> data)
-        {
-            ThreadPool.QueueUserWorkItem(new WaitCallback(worker), data);
-            //worker(data);
+        {   
+            //ThreadPool.QueueUserWorkItem(new WaitCallback(worker), data);
+            worker(data);
         }
 
-        public void worker(dynamic frame)
+        public void threadWorker()
         {
-            frame = (Image<Bgr, Byte>) frame;
-            Image<Bgr, Byte> ROI_frame;
-            Image<Bgr, Byte> origFrame;
-            origFrame = (Image<Bgr, Byte>) frame.Clone();// new Image<Bgr, Byte>(frame);
+            while (true)
+            {
+                while (!flag) ;
+                worker(frameClone);
+                flag = false;
+                // cl.Data = null;
+            }
+        }
 
-            //capture.Retrieve(mat); //Полученный кадр
-            //frame = mat.ToImage<Bgr, Byte>();
-            //frame = frame.Resize(0.3, Inter.Cubic);
-            //Хаар работает с ЧБ изображением
-            //Детектируем
-            Rectangle[] facesDetected2;
+        //Процедура обработки кадров
+        public void processFrame(object sender, EventArgs e)
+        {
+            Emgu.CV.UI.ImageBox VideoImage = MemBox.getStreamBox();
+            Emgu.CV.UI.ImageBox crop = MemBox.getCropBox();
+            Mat mat = new Mat();
+            capture.Retrieve(mat);
+            frame = mat.ToImage<Bgr, Byte>();         
+            
+            if (frameCounter % framePass == 0)
+            {
+                frameClone = frame.Clone();
+                //dataHandler(cl);
+                //actionHandler(cl);
+                flag = true;
+                frameCounter = 1;
+            }
 
-            mut.WaitOne();
-            facesDetected2 = cascadeClassifier.DetectMultiScale(
-                           origFrame.Convert<Gray, Byte>(), //Исходное изображение
+            frameCounter++;
+            MemBox.getStreamBox().Image = frame;
+        }
+
+        private Rectangle[] detectAreas(Image<Bgr, Byte> img)
+        {
+            return cascadeClassifier.DetectMultiScale(
+                           img.Convert<Gray, Byte>(), //Исходное изображение
                            1.1,  //Коэффициент увеличения изображения
                            5,   //Группировка предварительно обнаруженных событий. Чем их меньше, тем больше ложных тревог
                            new Size(15, 15), //Минимальный размер
                            new Size(200, 200)); //Максимальный 
-            mut.ReleaseMutex();
-            //Выводим всё найденное
-            //MSER
+        }
+
+        public void worker(dynamic frame)
+        {
+            Image<Bgr, Byte> ROI_frame;
+            Image<Bgr, Byte> origFrame;
+            Rectangle[] facesDetected2;
+
+            frame = (Image<Bgr, Byte>)frame;
+            origFrame = frame;
+            //(Image<Bgr, Byte>)frame.Clone();
+
+            facesDetected2 = detectAreas(origFrame);
+
             ROI_frame = origFrame;
 
             for (int i = 0; i < facesDetected2.Length; i++)
             {
-
                 ROI_frame = origFrame.Copy(facesDetected2[i]);
                 origFrame.Draw(facesDetected2[i], new Bgr(Color.Blue), 2);
                 Image<Bgr, Byte> rotateImg = rotationPlate(ROI_frame);
@@ -138,35 +173,7 @@ namespace NumberPlateDetector
             //            int output = machine.Compute(input);
         }
 
-        public void threadWorker()
-        {
-            while (true)
-            {
-               // while (dataReceive);
-
-            }
-        }
-
-        //Процедура обработки кадров
-        public void processFrame(object sender, EventArgs e)
-        {
-            Emgu.CV.UI.ImageBox VideoImage = MemBox.getStreamBox();
-            Emgu.CV.UI.ImageBox crop = MemBox.getCropBox();
-            Mat mat = new Mat();
-            capture.Retrieve(mat); //Полученный кадр
-            Image<Bgr, Byte> frame = mat.ToImage<Bgr, Byte>();
-            if (frameCounter % framePass == 0)
-            {
-                Image<Bgr, Byte> cl = frame.Clone();
-                dataHandler(cl);
-                frameCounter = 1;
-            }
-
-            frameCounter++;
-            MemBox.getStreamBox().Image = frame;
-        }
-
-        Image<Bgr, byte> rotationPlate(Image<Bgr, byte> image)
+        public Image<Bgr, byte> rotationPlate(Image<Bgr, byte> image)
         {
             Image<Gray, Byte> sobel_frame;
             Image<Gray, Byte> gray_image = image.Convert<Gray, Byte>();
@@ -241,7 +248,7 @@ namespace NumberPlateDetector
             return image;
         }
 
-        Image<Bgr, byte> normalizePlate(Image<Bgr, byte> image)
+        public Image<Bgr, byte> normalizePlate(Image<Bgr, byte> image)
         {
             Image<Bgr, Byte> img = image;
             MemBox.getNormBox().Image = img;

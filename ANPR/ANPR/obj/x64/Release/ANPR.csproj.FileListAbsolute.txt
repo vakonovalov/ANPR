@@ -50,4 +50,3 @@ C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\bin\x64\Release\Emgu.CV.UI.dll
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\bin\x64\Release\Emgu.CV.World.dll
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\bin\x64\Release\FANNCSharp.dll
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\bin\x64\Release\Fann.Net.dll
-C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x64\Release\ANPR.csprojResolveAssemblyReference.cache

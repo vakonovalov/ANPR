@@ -14,6 +14,5 @@ C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x64\Debug\ANPR.Properties.R
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x64\Debug\ANPR.csproj.GenerateResource.Cache
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x64\Debug\ANPR.exe
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x64\Debug\ANPR.pdb
-C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x64\Debug\ANPR.csprojResolveAssemblyReference.cache
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\bin\x64\Debug\Fann.Net.dll
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\bin\x64\Debug\FANNCSharp.dll
