@@ -17,3 +17,7 @@ C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x86\Release\ANPR.csproj.Gen
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x86\Release\ANPR.exe
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x86\Release\ANPR.pdb
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x86\Release\ANPR.csprojResolveAssemblyReference.cache
+C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\bin\x86\Release\Emgu.CV.UI.pdb
+C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\bin\x86\Release\Emgu.CV.UI.xml
+C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\bin\x86\Release\Emgu.CV.World.pdb
+C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\bin\x86\Release\Emgu.CV.World.xml

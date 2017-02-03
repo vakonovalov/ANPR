@@ -16,3 +16,8 @@ C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x64\Debug\ANPR.exe
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x64\Debug\ANPR.pdb
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\bin\x64\Debug\Fann.Net.dll
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\bin\x64\Debug\FANNCSharp.dll
+C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\bin\x64\Debug\Emgu.CV.UI.pdb
+C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\bin\x64\Debug\Emgu.CV.UI.xml
+C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\bin\x64\Debug\Emgu.CV.World.pdb
+C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\bin\x64\Debug\Emgu.CV.World.xml
+C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x64\Debug\ANPR.csprojResolveAssemblyReference.cache

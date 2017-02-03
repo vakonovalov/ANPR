@@ -27,6 +27,7 @@ namespace NumberPlateDetector
     public partial class Form1 : Form
     {
         Recognitor rec;
+
         public Form1()
         {
             InitializeComponent();
@@ -34,33 +35,110 @@ namespace NumberPlateDetector
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            MemBox.setStreamBox(VideoImage);
-            MemBox.setCropBox(crop);
-            MemBox.setPr1Box(pr1);
-            MemBox.setPr2Box(pr2);
-            MemBox.setAngle(textBox1);
-            MemBox.setNormBox(normBox);
-            MemBox.setNr1Box(nr1Box);
-            MemBox.setNr1Box(nr2Box);
-            MemBox.setSymBox(symbols);
-
+            actionLog.AutoResizeColumns(ColumnHeaderAutoResizeStyle.HeaderSize);
+            MemBox.setDisplayForm(this);
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void captureStateController(object sender, EventArgs e)
         {
-            rec = new Recognitor();
+            Button clickedButton = (Button)sender;
+
+            if (rec != null)
+            {
+                switch (clickedButton.Name)
+                {
+                    case "pause":
+                        {
+                            rec.getCapture().Pause();
+                            logWriter("Воспроизведение приостановлено");
+                        }
+                        break;
+                    case "play":
+                        {
+                            if (rec.getState() == 0) 
+                            {
+                                rec = null;
+                                rec = new Recognitor();
+                                rec.Run();
+                                rec.getCapture().Start();
+                            }
+                            else 
+                            {
+                                rec.getCapture().Start();
+                            }
+                            
+                            logWriter("Воспроизведение возобновлено");
+                            break;
+                        }
+                    case "stop":
+                        {
+                            if (rec.getState() == 0)
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                rec.getCapture().Stop();
+                                rec.getCapture().Dispose();
+                                rec.setState(0);
+                                rec = null;
+                                logWriter("Воспроизведение завершено");
+                                streamBox.Image = null;
+                            }
+                            break;
+                        }
+                    case "sourcePlay":
+                        {
+                            if (rec.getState() == 0)
+                            {
+                                rec = new Recognitor();
+                                rec.Run();
+                            }
+                            else 
+                            {
+                                break;
+                            }
+                            
+                            break;
+                        }
+                    default:
+                        break;
+                };
+            }
+            else if (clickedButton.Name.CompareTo("sourcePlay") == 0) 
+            {
+                rec = new Recognitor();
+                rec.Run();
+            }
+        }
+
+        private void play_Click(object sender, EventArgs e)
+        {
+            captureStateController(sender, e);
             MemBox.setState(1);
-            rec.Run();
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void stop_Click(object sender, EventArgs e)
         {
+            captureStateController(sender, e);
             MemBox.setState(0);
         }
 
-        private void label4_Click(object sender, EventArgs e) 
+        private void pause_Click(object sender, EventArgs e)
         {
-        
+            captureStateController(sender, e);
+            MemBox.setState(2);
         }
+
+        private void sourcePlay_Click(object sender, EventArgs e)
+        {
+            captureStateController(sender, e);
+            MemBox.setState(3);  
+        }
+
+        private void logWriter(String str) 
+        {
+            actionLog.Items.Add(str);
+        }  
     }
 }
