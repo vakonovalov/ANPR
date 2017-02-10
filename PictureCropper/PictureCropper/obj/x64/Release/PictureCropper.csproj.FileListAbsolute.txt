@@ -1,0 +1,12 @@
+C:\Users\aeronet\Documents\GitHub\ANPR\PictureCropper\PictureCropper\bin\x64\Release\PictureCropper.exe.config
+C:\Users\aeronet\Documents\GitHub\ANPR\PictureCropper\PictureCropper\bin\x64\Release\cvextern.dll
+C:\Users\aeronet\Documents\GitHub\ANPR\PictureCropper\PictureCropper\bin\x64\Release\PictureCropper.exe
+C:\Users\aeronet\Documents\GitHub\ANPR\PictureCropper\PictureCropper\bin\x64\Release\PictureCropper.pdb
+C:\Users\aeronet\Documents\GitHub\ANPR\PictureCropper\PictureCropper\bin\x64\Release\Emgu.CV.UI.dll
+C:\Users\aeronet\Documents\GitHub\ANPR\PictureCropper\PictureCropper\bin\x64\Release\Emgu.CV.World.dll
+C:\Users\aeronet\Documents\GitHub\ANPR\PictureCropper\PictureCropper\obj\x64\Release\PictureCropper.csprojResolveAssemblyReference.cache
+C:\Users\aeronet\Documents\GitHub\ANPR\PictureCropper\PictureCropper\obj\x64\Release\PictureCropper.Form1.resources
+C:\Users\aeronet\Documents\GitHub\ANPR\PictureCropper\PictureCropper\obj\x64\Release\PictureCropper.Properties.Resources.resources
+C:\Users\aeronet\Documents\GitHub\ANPR\PictureCropper\PictureCropper\obj\x64\Release\PictureCropper.csproj.GenerateResource.Cache
+C:\Users\aeronet\Documents\GitHub\ANPR\PictureCropper\PictureCropper\obj\x64\Release\PictureCropper.exe
+C:\Users\aeronet\Documents\GitHub\ANPR\PictureCropper\PictureCropper\obj\x64\Release\PictureCropper.pdb

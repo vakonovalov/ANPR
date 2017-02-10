@@ -83,6 +83,7 @@
             this.streamBox.Location = new System.Drawing.Point(12, 30);
             this.streamBox.Name = "streamBox";
             this.streamBox.Size = new System.Drawing.Size(523, 481);
+            this.streamBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.streamBox.TabIndex = 2;
             this.streamBox.TabStop = false;
             // 

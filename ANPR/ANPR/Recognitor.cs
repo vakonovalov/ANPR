@@ -38,7 +38,7 @@ namespace NumberPlateDetector
     class Recognitor
     {
         private int framePass;
-        private int frameCounter;
+        private Int64 frameCounter;
         private int state;
         private Capture capture;
         private CascadeClassifier cascadeClassifier;
@@ -53,7 +53,7 @@ namespace NumberPlateDetector
         public Recognitor()
         {
             cascadeClassifier = new CascadeClassifier("./cascade.xml");
-            framePass = 2;
+            framePass = 1;
             frameCounter = 1;
             queue = new ConcurrentQueue<Image<Bgr, Byte>>();
             backgroundThread = new Thread(backgroundHandler);
@@ -109,7 +109,14 @@ namespace NumberPlateDetector
             capture.Retrieve(mat);
             frame = mat.ToImage<Bgr, Byte>();
             //ThreadPool.QueueUserWorkItem(new WaitCallback(frameHandler), frame);  
-            frameHandler(frame);
+            //frameHandler(frame);
+
+            
+            
+            frameWorker(frame);
+            frameCounter++;
+            frame.Dispose();
+            //MemBox.getDisplayForm().streamBox.Image = frame;
         }
 
         protected void backgroundHandler()
@@ -135,11 +142,10 @@ namespace NumberPlateDetector
                 {
                     queue.Enqueue(frame);
                     pick.Set();
-                    frameCounter = 1;
                 }
             }
             frameCounter++;
-            MemBox.getDisplayForm().streamBox.Image = frame;
+            //MemBox.getDisplayForm().streamBox.Image = frame;
         }
 
         public void frameWorker(Image <Bgr, Byte> currFrame)
@@ -149,6 +155,7 @@ namespace NumberPlateDetector
             Rectangle[] platesDetected;
 
             origFrame = currFrame;
+            //origFrame.Save("./frames/" + frameCounter.ToString() + ".bmp");
 
             platesDetected = cascadeClassifier.DetectMultiScale(
                            origFrame.Convert<Gray, Byte>(), //Исходное изображение
@@ -166,6 +173,7 @@ namespace NumberPlateDetector
                 MemBox.getDisplayForm().crop.Image = rotateImg;
                 Image<Bgr, Byte> normImg = normalizePlate(rotateImg);
                 MemBox.getDisplayForm().normBox.Image = normImg;
+                //normImg.Save("./plates/" + frameCounter.ToString() + "." + (i+1).ToString() + ".bmp");
                 //MulticlassSupportVectorMachine machine = MulticlassSupportVectorMachine.Load("MachineForSymbol.machineforsymbol");
                 //int output = machine.Compute(BitmapToDouble(ROI_frame.ToBitmap()).ToArray());
 

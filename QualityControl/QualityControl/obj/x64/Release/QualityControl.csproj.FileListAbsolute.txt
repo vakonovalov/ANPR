@@ -1,0 +1,33 @@
+c:\users\юзер\documents\visual studio 2013\Projects\QualityControl\QualityControl\bin\x64\Release\QualityControl.exe.config
+c:\users\юзер\documents\visual studio 2013\Projects\QualityControl\QualityControl\bin\x64\Release\cvextern.dll
+c:\users\юзер\documents\visual studio 2013\Projects\QualityControl\QualityControl\bin\x64\Release\opencv_ffmpeg310_64.dll
+c:\users\юзер\documents\visual studio 2013\Projects\QualityControl\QualityControl\bin\x64\Release\QualityControl.exe
+c:\users\юзер\documents\visual studio 2013\Projects\QualityControl\QualityControl\bin\x64\Release\QualityControl.pdb
+c:\users\юзер\documents\visual studio 2013\Projects\QualityControl\QualityControl\bin\x64\Release\Emgu.CV.UI.dll
+c:\users\юзер\documents\visual studio 2013\Projects\QualityControl\QualityControl\bin\x64\Release\Emgu.CV.World.dll
+c:\users\юзер\documents\visual studio 2013\Projects\QualityControl\QualityControl\bin\x64\Release\Emgu.CV.UI.pdb
+c:\users\юзер\documents\visual studio 2013\Projects\QualityControl\QualityControl\bin\x64\Release\Emgu.CV.UI.xml
+c:\users\юзер\documents\visual studio 2013\Projects\QualityControl\QualityControl\bin\x64\Release\Emgu.CV.World.pdb
+c:\users\юзер\documents\visual studio 2013\Projects\QualityControl\QualityControl\bin\x64\Release\Emgu.CV.World.xml
+c:\users\юзер\documents\visual studio 2013\Projects\QualityControl\QualityControl\obj\x64\Release\QualityControl.Form1.resources
+c:\users\юзер\documents\visual studio 2013\Projects\QualityControl\QualityControl\obj\x64\Release\QualityControl.Properties.Resources.resources
+c:\users\юзер\documents\visual studio 2013\Projects\QualityControl\QualityControl\obj\x64\Release\QualityControl.csproj.GenerateResource.Cache
+c:\users\юзер\documents\visual studio 2013\Projects\QualityControl\QualityControl\obj\x64\Release\QualityControl.exe
+c:\users\юзер\documents\visual studio 2013\Projects\QualityControl\QualityControl\obj\x64\Release\QualityControl.pdb
+C:\Users\aeronet\Desktop\project\QualityControl\QualityControl\bin\x64\Release\QualityControl.exe.config
+C:\Users\aeronet\Desktop\project\QualityControl\QualityControl\obj\x64\Release\QualityControl.exe
+C:\Users\aeronet\Desktop\project\QualityControl\QualityControl\obj\x64\Release\QualityControl.pdb
+C:\Users\aeronet\Desktop\project\QualityControl\QualityControl\bin\x64\Release\cvextern.dll
+C:\Users\aeronet\Desktop\project\QualityControl\QualityControl\bin\x64\Release\opencv_ffmpeg310_64.dll
+C:\Users\aeronet\Desktop\project\QualityControl\QualityControl\bin\x64\Release\QualityControl.exe
+C:\Users\aeronet\Desktop\project\QualityControl\QualityControl\bin\x64\Release\QualityControl.pdb
+C:\Users\aeronet\Desktop\project\QualityControl\QualityControl\bin\x64\Release\Emgu.CV.UI.dll
+C:\Users\aeronet\Desktop\project\QualityControl\QualityControl\bin\x64\Release\Emgu.CV.World.dll
+C:\Users\aeronet\Desktop\project\QualityControl\QualityControl\bin\x64\Release\Emgu.CV.UI.pdb
+C:\Users\aeronet\Desktop\project\QualityControl\QualityControl\bin\x64\Release\Emgu.CV.UI.xml
+C:\Users\aeronet\Desktop\project\QualityControl\QualityControl\bin\x64\Release\Emgu.CV.World.pdb
+C:\Users\aeronet\Desktop\project\QualityControl\QualityControl\bin\x64\Release\Emgu.CV.World.xml
+C:\Users\aeronet\Desktop\project\QualityControl\QualityControl\obj\x64\Release\QualityControl.csprojResolveAssemblyReference.cache
+C:\Users\aeronet\Desktop\project\QualityControl\QualityControl\obj\x64\Release\QualityControl.Form1.resources
+C:\Users\aeronet\Desktop\project\QualityControl\QualityControl\obj\x64\Release\QualityControl.Properties.Resources.resources
+C:\Users\aeronet\Desktop\project\QualityControl\QualityControl\obj\x64\Release\QualityControl.csproj.GenerateResource.Cache

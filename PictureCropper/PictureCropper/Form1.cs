@@ -134,6 +134,11 @@ namespace PictureCropper
             File.AppendAllText(fileadress, s + "  1  " + "0 0 " + Crop.Width + " " + Crop.Height + "\r\n");
             // File.AppendAllText(fileadress, s  + "\r\n");
         }
+
+        private void PictureWindow_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }
 

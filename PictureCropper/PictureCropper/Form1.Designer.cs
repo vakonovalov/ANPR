@@ -42,6 +42,7 @@
             this.PictureWindow.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.PictureWindow.TabIndex = 3;
             this.PictureWindow.TabStop = false;
+            this.PictureWindow.Click += new System.EventHandler(this.PictureWindow_Click);
             this.PictureWindow.MouseDown += new System.Windows.Forms.MouseEventHandler(this.PictureWindow_MouseDown);
             this.PictureWindow.MouseUp += new System.Windows.Forms.MouseEventHandler(this.PictureWindow_MouseUp);
             // 
