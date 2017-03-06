@@ -111,12 +111,11 @@ namespace NumberPlateDetector
             //ThreadPool.QueueUserWorkItem(new WaitCallback(frameHandler), frame);  
             //frameHandler(frame);
 
-            
-            
+
             frameWorker(frame);
             frameCounter++;
-            frame.Dispose();
-            //MemBox.getDisplayForm().streamBox.Image = frame;
+           // frame.Dispose();
+            MemBox.getDisplayForm().streamBox.Image = frame;
         }
 
         protected void backgroundHandler()

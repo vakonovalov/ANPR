@@ -21,17 +21,27 @@ using System.Drawing.Imaging;
 
 namespace QualityControl
 {
+    enum State 
+    {
+        TRUE_POSITIVE  = 0,
+        TRUE_NEGATIVE  = 1,
+        FALSE_POSITIVE = 2,
+        FALSE_NEGATIVE = 3
+    }
+}
+
+namespace QualityControl
+{
     public partial class Form1 : Form
     {
-        private dynamic box = null;
+        private int isProgress;
         private Int64 frameCounter;
         private Capture videoGrabber;
         private List<string> sample = new List<string>();
-        //private Image<Bgr, Byte> frame;
-        public TaskScheduler taskScheduler;
+        private StreamWriter report;
+        private string reportsFolder= @".\reports\";
+        private Int64 maxFramesCount; 
 
-        object locker = new object();
-        int st = 1;
 
         public Form1()
         {
@@ -65,12 +75,32 @@ namespace QualityControl
             return "";
         }
 
+        private String getReportSource()
+        {
+            const string message = "Выберите файл отчета";
+            const string caption = "Select file";
+            MessageBox.Show(message, caption,
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Question);
+
+            OpenFileDialog fbd = new OpenFileDialog();
+            if (fbd.ShowDialog() == DialogResult.OK)
+            {
+                string ext = Path.GetExtension(fbd.FileName);
+                if (ext != ".txt") return null;
+                return fbd.FileName;
+            }
+            return "";
+        }
+
+
         public void initGrabber()
         {
             String source = getGrabberSource();
             if (source != "")
             {
                 videoGrabber = new Capture(source);
+                maxFramesCount = Convert.ToInt64(videoGrabber.GetCaptureProperty(CapProp.FrameCount));
             }
             else
             {
@@ -97,114 +127,248 @@ namespace QualityControl
             }
         }
 
-        public string createBox(string s)
+        private string getShortName(string s)
         {
-            listBox1.Items.Add(s);
-            return "";
+
+            return s.Substring(s.LastIndexOf('\\') + 1, s.Length - s.LastIndexOf('\\') - 1);
         }
-
-
-        public Image<Bgr, Byte> imgs(Image<Bgr, Byte> s)
-        {
-            pictureBox1.Image = s.ToBitmap();
-            return s;
-        }
-
-        public ImageBox addIMB(ImageBox s)
-        {
-            s.Name = "sda";
-            s.Width = 100;
-            s.Height = 50;
-            s.SizeMode = PictureBoxSizeMode.Normal;
-            s.Visible = true;
-            s.BackColor = Color.Black;
-            panel1.Controls.Add(s);
-            return s;
-        }
-
-
-
+        
         private void fingChild(Int64 fNum)
         {
             List<string> plates = sample.FindAll(s => s.Substring(s.LastIndexOf('\\') + 1, s.IndexOf('.') - s.LastIndexOf('\\') - 1) == fNum.ToString());
             ImageList plateImages = new ImageList();
+            ImageList imgs = new ImageList();
+
+            imgs.ImageSize = new Size(67, 22);
+
+            platesList.Items.Clear();
 
             for (int i = 0; i < plates.Count; i++)
             {
-                Task<Image<Bgr, Byte>> task = Task.Run(() =>
-                {
-                    Image<Bgr, Byte> img = new Image<Bgr, byte>(plates[i]);
-                    return img;
-                }).ContinueWith(t => imgs(t.Result), taskScheduler);
-
-                /*Task<ImageBox> task = Task.Run(() =>
-                {
-                    ImageBox imb = new ImageBox();
-                    Image<Bgr, Byte> img = new Image<Bgr, byte>(plates[i]);
-                    imb.Image = img;
-                    return imb;
-                }).ContinueWith(t => addIMB(t.Result), taskScheduler);*/
-                int j = panel1.Controls.Count;
+                    imgs.Images.Add(Image.FromFile(plates[i]));
+                    ListViewItem it = new ListViewItem();
+                    it.ImageIndex = i;
+                    it.Text = getShortName(plates[i]);
+                    platesList.Items.Add(it);
             }
+
+            if (checkBox2.Checked && plates.Count == 0)
+            {
+                if (fNum >= Convert.ToInt64(textBoxStart.Text) && fNum <= Convert.ToInt64(textBoxEnd.Text))
+                {
+                    report.WriteLine(fNum.ToString() + " " + ((int)State.FALSE_NEGATIVE).ToString());
+                    report.Flush();
+                    isProgress = 1;
+                    return;
+                }
+            }
+            
+            if (plates.Count != 0)
+            {
+                isProgress = 0;
+                Next.Enabled = true;
+                panel1.Enabled = true;
+            }
+
+            if (plates.Count == 0)
+            {
+                isProgress = 0;
+                Next.Enabled = true;
+                panel1.Enabled = true;
+            }
+            platesList.SmallImageList = imgs;
         }
 
-        public void grabedFrameHandler(object sender, EventArgs e)
+        private StreamWriter getStream()
         {
+            string file = reportsFolder + "report " + (DateTime.Now).ToString("dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture) + ".txt";
+            if (!File.Exists(file))
+            {
+                using (File.Create(file));
+                report = new StreamWriter(file);
+            }
+            else 
+            {
+                File.Delete(file);
+                using (File.Create(file));               
+                report = new StreamWriter(file); 
+            }
+            return report;  
+        }
 
-            Image<Gray, Byte> frame;
-            frameCounter++;
-            Mat m = new Mat();
-            videoGrabber.Retrieve(m);
-            frame = m.ToImage<Gray, Byte>();
-            framesStream.Image = frame;
-            fingChild(frameCounter);
-            frame.Dispose();
-            /*for (; ; )
+        public void grabedFrameHandler()
+        {
+            while (isProgress == 1 && frameCounter < maxFramesCount)
             {
                 Image<Bgr, Byte> frame;
-                frameCounter++;
                 frame = videoGrabber.QueryFrame().ToImage<Bgr, Byte>();
+                frameCounter = Convert.ToInt64(videoGrabber.GetCaptureProperty(CapProp.PosFrames));
+                textBox3.Text = frameCounter.ToString();
                 framesStream.Image = frame;
                 fingChild(frameCounter);
                 framesStream.Refresh();
                 Application.DoEvents();
                 frame.Dispose();
-
-            }*/
-
+            }
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
             frameCounter = 0;
+            isProgress = 0;
+            platesList.View = View.Details;
+            platesList.Columns.Add("Plates", 200);
+            initGrabber();
+            initSample();
+            panel1.Enabled = false;
+            //Next.Enabled = false;
+            hScrollBar1.Maximum = 108;
+            getStream();
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            initGrabber();
-            initSample();
-            taskScheduler = TaskScheduler.FromCurrentSynchronizationContext();
-            videoGrabber.ImageGrabbed += grabedFrameHandler;
-            videoGrabber.Start();
-
-            //grabedFrameHandler();
-        }
-
-        private void Form1_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (e.KeyChar == ' ')
+            if (frameCounter != maxFramesCount)
             {
-                if (st == 1)
+                switch (isProgress)
                 {
-                    videoGrabber.Pause();
-                    st = 0;
-                }
-                else if (st == 0)
-                {
-                    videoGrabber.Start();
-                    st = 1;
+                    case 0:
+                        {
+                            isProgress = 1;
+                            panel1.Enabled = false;
+                            Next.Enabled = false;
+                            grabedFrameHandler();
+                            break;
+                        }
+                    case 1:
+                        {
+                            panel1.Enabled = true;
+                            Next.Enabled = true;
+                            isProgress = 0;
+                            break;
+                        }
+                    default:
+                        break;
                 }
             }
         }
+
+        private void Add_Click(object sender, EventArgs e)
+        {
+            if (textBox1.TextLength > 0)
+            {
+                if (checkBox1.Checked)
+                {
+                    report.WriteLine(textBox1.Text + " " + ((int)State.FALSE_POSITIVE).ToString());
+                    report.Flush();
+                }
+                else
+                {
+                    report.WriteLine(textBox1.Text + " " + ((int)State.TRUE_POSITIVE).ToString());
+                    report.Flush();
+                }
+            }
+        }
+
+        private void platesList_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (platesList.SelectedItems.Count > 0)
+            {
+                if (platesList.SelectedItems[0]!= null)
+                {
+                    textBox1.Text = platesList.SelectedItems[0].Text;
+                }
+                else
+                {
+                    textBox1.Text = "";
+                }
+            }
+        }
+
+        private void Jump_Click(object sender, EventArgs e)
+        {
+            if (textBox2.TextLength > 0)
+            {
+                Int64 cadr = Convert.ToInt64(textBox2.Text);
+                videoGrabber.SetCaptureProperty(CapProp.PosFrames, cadr);
+            }
+            button1_Click(this, null);
+        }
+
+        private void hScrollBar1_Scroll(object sender, ScrollEventArgs e)
+        {
+            int perc = hScrollBar1.Value;
+            videoGrabber.SetCaptureProperty(CapProp.PosFrames, maxFramesCount * (perc / 100.0));
+        }
+
+        private List<int> metricsCalculate()
+        {
+            string file = getReportSource();
+            if (file == null) 
+                return null;
+            List<int> counts = new List<int>(sizeof(State));
+            for (int i = 0; i < sizeof(State); ++i)
+            {
+                counts.Add(0);
+            }
+                
+            string[] data = File.ReadAllLines(file);
+            for (int i = 0; i < data.Length; i++)
+            {
+                State num = (State)int.Parse(data[i].Substring(data[i].IndexOf(' ')));
+                switch (num)
+                {
+                    case State.TRUE_POSITIVE:
+                        counts[(int)num] += 1;
+                        break;
+                    case State.TRUE_NEGATIVE:
+                        counts[(int)num] += 1;
+                        break;
+                    case State.FALSE_POSITIVE:
+                        counts[(int)num] += 1;
+                        break;
+                    case State.FALSE_NEGATIVE:
+                        counts[(int)num] += 1;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return counts;
+        }
+
+        private bool checkValues(List <int> metrics)
+        {
+            if (metrics[(int)State.TRUE_POSITIVE] + metrics[(int)State.FALSE_POSITIVE] == 0)
+                return false;
+            if (metrics[(int)State.TRUE_POSITIVE] + metrics[(int)State.FALSE_NEGATIVE] == 0)
+                return false;
+            return true;
+        }
+          
+        private void button2_Click(object sender, EventArgs e)
+        {
+            List <int> metrics = metricsCalculate();
+            double precision, recall, F;
+
+            double TP = metrics[(int)State.TRUE_POSITIVE];
+            double TN = metrics[(int)State.TRUE_NEGATIVE];
+            double FP = metrics[(int)State.FALSE_POSITIVE];
+            double FN = metrics[(int)State.FALSE_NEGATIVE];
+
+            if (!checkValues(metrics)) return;
+
+            precision = TP / (TP + FP);
+            recall = TP / (TP + FN);
+            if (precision + recall == 0)
+                return;
+            F = 2 * (precision * recall) / (precision + recall);
+
+            textBox4.Text = precision.ToString();
+            textBox5.Text = recall.ToString();
+            textBox6.Text = Math.Round(F, 6).ToString();
+        }
+
+
     }
 }
