@@ -33,7 +33,7 @@ using DataType = System.Single;
 using AForge.Imaging;
 using AForge.Imaging.Filters;
 
-namespace NumberPlateDetector
+namespace ANPR
 {
     class Recognitor
     {
@@ -43,29 +43,31 @@ namespace NumberPlateDetector
         private Capture capture;
         private CascadeClassifier cascadeClassifier;
         /*событие о том что получено изображение  + дегелат события*/
-        private event workerPointer dataReceive;
         private delegate void workerPointer(Image<Bgr, Byte> data);
         private AutoResetEvent pick;
         private ConcurrentQueue<Image<Bgr, Byte>> queue; 
         private Thread backgroundThread;
         private static int lockFlag = 0;
-                
+        private PlateProcessor plateProcessor;
+
         public Recognitor()
         {
             cascadeClassifier = new CascadeClassifier("./cascade.xml");
             framePass = 1;
             frameCounter = 1;
             queue = new ConcurrentQueue<Image<Bgr, Byte>>();
-            backgroundThread = new Thread(backgroundHandler);
+            backgroundThread = new Thread(BackgroundFrameHandler);
             backgroundThread.IsBackground = true;
+            backgroundThread.Priority = ThreadPriority.Lowest;
             pick = new AutoResetEvent(false);
             state = 0;
+            plateProcessor = new PlateProcessor();
         }
 
         public void Run()
         {
             setState(1);
-            String videoFile = chooseFile();
+            String videoFile = ChooseFile();
             try
             {
                 if (videoFile != "")
@@ -76,7 +78,7 @@ namespace NumberPlateDetector
                 {
                     capture = new Capture();
                 }
-                capture.ImageGrabbed += frameSender;
+                capture.ImageGrabbed += ImageGrabbedEventHandler;
                 backgroundThread.Start();
             }
             catch (Exception e)
@@ -86,7 +88,7 @@ namespace NumberPlateDetector
             }
         }
 
-        public String chooseFile()
+        public String ChooseFile()
         {
             const string message = "Choose video file";
             const string caption = "Video file";
@@ -102,38 +104,22 @@ namespace NumberPlateDetector
             return "";
         }
 
-        public void frameSender(object sender, EventArgs e)
+        public void ImageGrabbedEventHandler(object sender, EventArgs e)
         {
             Mat mat = new Mat();
             Image<Bgr, Byte> frame;
             capture.Retrieve(mat);
             frame = mat.ToImage<Bgr, Byte>();
             //ThreadPool.QueueUserWorkItem(new WaitCallback(frameHandler), frame);  
-            //frameHandler(frame);
-
-
-            frameWorker(frame);
-            frameCounter++;
+            AddToQueueCurrentFrame(frame);
+           // frameWorker(frame);
+            //frameCounter++;
            // frame.Dispose();
             MemBox.getDisplayForm().streamBox.Image = frame;
         }
 
-        protected void backgroundHandler()
-        {
-            Image<Bgr, Byte> currFrame;
-            while (state == 1)
-            {
-                pick.WaitOne();
-                currFrame = null;
-                while (queue.TryDequeue(out currFrame)) 
-                {
-                    frameWorker(currFrame);
-                }
-            }
-        }
-
         /*Процедура обработки кадров*/
-        public void frameHandler(dynamic frame)
+        public void AddToQueueCurrentFrame(dynamic frame)
         {
             if (frameCounter % framePass == 0)
             {
@@ -146,8 +132,22 @@ namespace NumberPlateDetector
             frameCounter++;
             //MemBox.getDisplayForm().streamBox.Image = frame;
         }
+        
+        protected void BackgroundFrameHandler()
+        {
+            Image<Bgr, Byte> currFrame;
+            while (state == 1)
+            {
+                pick.WaitOne();
+                currFrame = null;
+                while (queue.TryDequeue(out currFrame)) 
+                {
+                    ProcessFrame(currFrame);
+                }
+            }
+        }
 
-        public void frameWorker(Image <Bgr, Byte> currFrame)
+        public void ProcessFrame(Image<Bgr, Byte> currFrame)
         {
             Image<Bgr, Byte> ROI_frame;
             Image<Bgr, Byte> origFrame;
@@ -168,10 +168,10 @@ namespace NumberPlateDetector
             {
                 ROI_frame = origFrame.Copy(platesDetected[i]);
                 //origFrame.Draw(facesDetected2[i], new Bgr(Color.Blue), 2);
-                Image<Bgr, Byte> rotateImg = rotationPlate(ROI_frame);
+                Image<Bgr, Byte> rotateImg = plateProcessor.ProcessPlate(ROI_frame.ToBitmap());//rotationPlate(ROI_frame);
                 MemBox.getDisplayForm().crop.Image = rotateImg;
-                Image<Bgr, Byte> normImg = normalizePlate(rotateImg);
-                MemBox.getDisplayForm().normBox.Image = normImg;
+                //Image<Bgr, Byte> normImg = normalizePlate(rotateImg);
+                //MemBox.getDisplayForm().normBox.Image = normImg;
                 //normImg.Save("./plates/" + frameCounter.ToString() + "." + (i+1).ToString() + ".bmp");
                 //MulticlassSupportVectorMachine machine = MulticlassSupportVectorMachine.Load("MachineForSymbol.machineforsymbol");
                 //int output = machine.Compute(BitmapToDouble(ROI_frame.ToBitmap()).ToArray());
@@ -181,125 +181,6 @@ namespace NumberPlateDetector
             //            MulticlassSupportVectorMachine machine = MulticlassSupportVectorMachine.Load("MachineForSymbol");
             //            double[] input = BitmapToDouble(ROI_frame.ToBitmap()).ToArray();
             //            int output = machine.Compute(input);
-        }
-
-        public Image<Bgr, Byte> rotationPlate(Image<Bgr, Byte> image)
-        {
-            Image<Gray, Byte> sobel_frame;
-            Image<Gray, Byte> gray_image = image.Convert<Gray, Byte>();
-
-            gray_image._EqualizeHist();
-            sobel_frame = gray_image;
-
-            Matrix<byte> kernelNoizeV = new Matrix<byte>(new Byte[5, 5] {   { 0, 0, 0, 0, 0 }, 
-                                                                            { 0, 0, 0, 0, 0 }, 
-                                                                            { 0, 1, 1, 1, 0 },
-                                                                            { 0, 0, 0, 0, 0 },
-                                                                            { 0, 0, 0, 0, 0 }});
-
-            Matrix<byte> kernelNoizeH = new Matrix<byte>(new Byte[5, 5] {   { 0, 0, 0, 0, 0 }, 
-                                                                            { 0, 0, 1, 0, 0 }, 
-                                                                            { 0, 0, 1, 0, 0 },
-                                                                            { 0, 0, 1, 0, 0 },
-                                                                            { 0, 0, 0, 0, 0 }});
-
-            Matrix<byte> kernel = new Matrix<byte>(new Byte[7, 7] {   { 0, 0, 0, 0, 0, 0, 0 }, 
-                                                                      { 0, 0, 0, 0, 0, 0, 0 }, 
-                                                                      { 0, 0, 1, 1, 1, 0, 0 }, 
-                                                                      { 0, 0, 1, 1, 1, 0, 0 }, 
-                                                                      { 0, 0, 1, 1, 1, 0, 0 }, 
-                                                                      { 0, 0, 0, 0, 0, 0, 0 }, 
-                                                                      { 0, 0, 0, 0, 0, 0, 0 }});
-
-            sobel_frame = sobel_frame.SmoothGaussian(3);
-            //Морфологическое открытие
-            sobel_frame = sobel_frame.MorphologyEx(MorphOp.Open, kernel, new Point(-1, -1), 1, BorderType.Default, new MCvScalar());
-            sobel_frame = sobel_frame.MorphologyEx(MorphOp.Erode, kernel, new Point(-1, -1), 1, BorderType.Default, new MCvScalar());
-
-            MemBox.getDisplayForm().pr1.Image = sobel_frame;
-
-            //Оператор Собеля
-            sobel_frame = sobel_frame.ThresholdAdaptive(new Gray(255.0), AdaptiveThresholdType.GaussianC, ThresholdType.Binary, 31, new Gray(-10.0));
-            sobel_frame = sobel_frame.MorphologyEx(MorphOp.Close, kernel, new Point(-1, -1), 1, BorderType.Default, new MCvScalar());
-
-            MemBox.getDisplayForm().pr2.Image = sobel_frame;
-
-            LineSegment2D[] lines = null;
-
-            /*ВЫделение горизонтальных прямых (widthLine >= 0/5*imageLine)*/
-            lines = sobel_frame.HoughLinesBinary(1, Math.PI / 200, image.Width / 2, image.Width / 2, 5)[0];
-            if (lines != null && lines.Length > 0)
-            {
-                double angle = 0;
-                LineSegment2D avr = new LineSegment2D();
-                foreach (LineSegment2D seg in lines)
-                {
-                    avr.P1 = new Point(avr.P1.X + seg.P1.X, avr.P1.Y + seg.P1.Y);
-                    avr.P2 = new Point(avr.P2.X + seg.P2.X, avr.P2.Y + seg.P2.Y);
-                    //image.Draw(seg, new Bgr(255, 0, 0), 1);
-                }
-                avr.P1 = new Point(avr.P1.X / lines.Length, avr.P1.Y / lines.Length);
-                avr.P2 = new Point(avr.P2.X / lines.Length, avr.P2.Y / lines.Length);
-                LineSegment2D horizontal = new LineSegment2D(avr.P1, new Point(avr.P2.X, avr.P1.Y));
-
-                //отрисовка угла поворота
-                //image.Draw(new LineSegment2D(avr.P1, new Point(avr.P2.X, avr.P1.Y)), new Bgr(0, 255, 0), 2);
-                //image.Draw(avr, new Bgr(0, 255, 0), 2);
-
-                double c = horizontal.P2.X - horizontal.P1.X;
-                double a = Math.Abs(horizontal.P2.Y - avr.P2.Y);
-                double b = Math.Sqrt(c * c + a * a);
-                angle = (a / b * (180 / Math.PI)) * (horizontal.P2.Y > avr.P2.Y ? 1 : -1);
-                //MemBox.getDisplayForm().angleBox.Text = Convert.ToString(Math.Round(angle, 3));
-                image = image.Rotate(angle, new Bgr(0, 0, 0));
-            }
-            return image;
-        }
-
-        public Image<Bgr, Byte> normalizePlate(Image<Bgr, Byte> image)
-        {
-            Image<Bgr, Byte> img = image;
-            return img;
-        }
-
-        private static List<double> BitmapToDouble(Bitmap bmp)
-        {
-            //При обучении нужно, чтобы все изображения были единого размера. База которую мы привели позволяет обучатся на размере 34*60. Тут мы её немножко ужимаем, для скорости работы.
-            ResizeNearestNeighbor filter = new ResizeNearestNeighbor(17, 30);
-            BitmapData bitmapData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height),
-                    ImageLockMode.ReadWrite, bmp.PixelFormat);
-            List<double> res = new List<double>();
-            int width = bitmapData.Width;
-            int height = bitmapData.Height;
-            int stride = bitmapData.Stride;
-            int offset = stride - width * 3;
-
-            unsafe
-            {
-                byte* ptr = (byte*)bitmapData.Scan0.ToPointer();
-                double summ = 0;
-                for (int y = 0; y < bitmapData.Height; y++)
-                {
-                    for (int x = 0; x < bitmapData.Width; x++, ptr += 3)
-                    {
-                        //Можно загрузить ЧБ изображения, но тут предполагается, что работаем с цветными изображениями
-                        res.Add((ptr[0] + ptr[1] + ptr[2]) / (3 * 255.0));
-                        summ += (ptr[0] + ptr[1] + ptr[2]);
-                    }
-                    ptr += offset;
-                }
-                summ = summ / (3 * 255.0 * bitmapData.Height * bitmapData.Width);
-                //Бинаризуем по среднему цвету изображения
-                for (int i = 0; i < res.Count; i++)
-                {
-                    if (res[i] < summ)
-                        res[i] = 0;
-                    else
-                        res[i] = 1;
-                }
-            }
-            bmp.UnlockBits(bitmapData);
-            return res;
         }
 
         public void setState(int st)
@@ -315,7 +196,6 @@ namespace NumberPlateDetector
         public Capture getCapture()
         {
             return this.capture;
-        }
-
+        }      
     }
 }

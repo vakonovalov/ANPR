@@ -1,4 +1,0 @@
-C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\bin\Release\ANPR.exe.config
-C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\Release\NumberPlateDetector.Form1.resources
-C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\Release\ANPR.Properties.Resources.resources
-C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\Release\ANPR.csproj.GenerateResource.Cache

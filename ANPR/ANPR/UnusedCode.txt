@@ -1,0 +1,439 @@
+﻿//////////////////////////////////////////////
+//////////////////////////////////////////////
+From Recognitor.cs
+//////////////////////////////////////////////
+        public Image<Bgr, Byte> rotationPlate(Image<Bgr, Byte> image)
+        {
+            Image<Gray, Byte> sobel_frame;
+            Image<Gray, Byte> gray_image = image.Convert<Gray, Byte>();
+
+            gray_image._EqualizeHist();
+            sobel_frame = gray_image;
+
+            Matrix<byte> kernelNoizeV = new Matrix<byte>(new Byte[5, 5] {   { 0, 0, 0, 0, 0 }, 
+                                                                            { 0, 0, 0, 0, 0 }, 
+                                                                            { 0, 1, 1, 1, 0 },
+                                                                            { 0, 0, 0, 0, 0 },
+                                                                            { 0, 0, 0, 0, 0 }});
+
+            Matrix<byte> kernelNoizeH = new Matrix<byte>(new Byte[5, 5] {   { 0, 0, 0, 0, 0 }, 
+                                                                            { 0, 0, 1, 0, 0 }, 
+                                                                            { 0, 0, 1, 0, 0 },
+                                                                            { 0, 0, 1, 0, 0 },
+                                                                            { 0, 0, 0, 0, 0 }});
+
+            Matrix<byte> kernel = new Matrix<byte>(new Byte[7, 7] {   { 0, 0, 0, 0, 0, 0, 0 }, 
+                                                                      { 0, 0, 0, 0, 0, 0, 0 }, 
+                                                                      { 0, 0, 1, 1, 1, 0, 0 }, 
+                                                                      { 0, 0, 1, 1, 1, 0, 0 }, 
+                                                                      { 0, 0, 1, 1, 1, 0, 0 }, 
+                                                                      { 0, 0, 0, 0, 0, 0, 0 }, 
+                                                                      { 0, 0, 0, 0, 0, 0, 0 }});
+
+            sobel_frame = sobel_frame.SmoothGaussian(3);
+            //Морфологическое открытие
+            sobel_frame = sobel_frame.MorphologyEx(MorphOp.Open, kernel, new Point(-1, -1), 1, BorderType.Default, new MCvScalar());
+            sobel_frame = sobel_frame.MorphologyEx(MorphOp.Erode, kernel, new Point(-1, -1), 1, BorderType.Default, new MCvScalar());
+
+            MemBox.getDisplayForm().pr1.Image = sobel_frame;
+
+            //Оператор Собеля
+            sobel_frame = sobel_frame.ThresholdAdaptive(new Gray(255.0), AdaptiveThresholdType.GaussianC, ThresholdType.Binary, 31, new Gray(-10.0));
+            sobel_frame = sobel_frame.MorphologyEx(MorphOp.Close, kernel, new Point(-1, -1), 1, BorderType.Default, new MCvScalar());
+
+            MemBox.getDisplayForm().pr2.Image = sobel_frame;
+
+            LineSegment2D[] lines = null;
+
+            /*ВЫделение горизонтальных прямых (widthLine >= 0/5*imageLine)*/
+            lines = sobel_frame.HoughLinesBinary(1, Math.PI / 200, image.Width / 2, image.Width / 2, 5)[0];
+            if (lines != null && lines.Length > 0)
+            {
+                double angle = 0;
+                LineSegment2D avr = new LineSegment2D();
+                foreach (LineSegment2D seg in lines)
+                {
+                    avr.P1 = new Point(avr.P1.X + seg.P1.X, avr.P1.Y + seg.P1.Y);
+                    avr.P2 = new Point(avr.P2.X + seg.P2.X, avr.P2.Y + seg.P2.Y);
+                    //image.Draw(seg, new Bgr(255, 0, 0), 1);
+                }
+                avr.P1 = new Point(avr.P1.X / lines.Length, avr.P1.Y / lines.Length);
+                avr.P2 = new Point(avr.P2.X / lines.Length, avr.P2.Y / lines.Length);
+                LineSegment2D horizontal = new LineSegment2D(avr.P1, new Point(avr.P2.X, avr.P1.Y));
+
+                //отрисовка угла поворота
+                //image.Draw(new LineSegment2D(avr.P1, new Point(avr.P2.X, avr.P1.Y)), new Bgr(0, 255, 0), 2);
+                //image.Draw(avr, new Bgr(0, 255, 0), 2);
+
+                double c = horizontal.P2.X - horizontal.P1.X;
+                double a = Math.Abs(horizontal.P2.Y - avr.P2.Y);
+                double b = Math.Sqrt(c * c + a * a);
+                angle = (a / b * (180 / Math.PI)) * (horizontal.P2.Y > avr.P2.Y ? 1 : -1);
+                //MemBox.getDisplayForm().angleBox.Text = Convert.ToString(Math.Round(angle, 3));
+                image = image.Rotate(angle, new Bgr(0, 0, 0));
+            }
+            return image;
+        }
+
+        public Image<Bgr, Byte> normalizePlate(Image<Bgr, Byte> image)
+        {
+            Image<Bgr, Byte> img = image;
+            return img;
+        }
+
+        private static List<double> BitmapToDouble(Bitmap bmp)
+        {
+            //При обучении нужно, чтобы все изображения были единого размера. База которую мы привели позволяет обучатся на размере 34*60. Тут мы её немножко ужимаем, для скорости работы.
+            ResizeNearestNeighbor filter = new ResizeNearestNeighbor(17, 30);
+            BitmapData bitmapData = bmp.LockBits(new Rectangle(0, 0, bmp.Width, bmp.Height),
+                    ImageLockMode.ReadWrite, bmp.PixelFormat);
+            List<double> res = new List<double>();
+            int width = bitmapData.Width;
+            int height = bitmapData.Height;
+            int stride = bitmapData.Stride;
+            int offset = stride - width * 3;
+
+            unsafe
+            {
+                byte* ptr = (byte*)bitmapData.Scan0.ToPointer();
+                double summ = 0;
+                for (int y = 0; y < bitmapData.Height; y++)
+                {
+                    for (int x = 0; x < bitmapData.Width; x++, ptr += 3)
+                    {
+                        //Можно загрузить ЧБ изображения, но тут предполагается, что работаем с цветными изображениями
+                        res.Add((ptr[0] + ptr[1] + ptr[2]) / (3 * 255.0));
+                        summ += (ptr[0] + ptr[1] + ptr[2]);
+                    }
+                    ptr += offset;
+                }
+                summ = summ / (3 * 255.0 * bitmapData.Height * bitmapData.Width);
+                //Бинаризуем по среднему цвету изображения
+                for (int i = 0; i < res.Count; i++)
+                {
+                    if (res[i] < summ)
+                        res[i] = 0;
+                    else
+                        res[i] = 1;
+                }
+            }
+            bmp.UnlockBits(bitmapData);
+            return res;
+        }
+
+//////////////////////////////////////////////
+//////////////////////////////////////////////
+From PlateProcessor.cs
+//////////////////////////////////////////////
+
+//        public void MyOldMethodForPlateHorizontalAndVerticalBoundaries()
+//        {
+//            int imgH = image.Height;
+//            int imgW = image.Width;
+//            List<double> yPoints = new List<double>(imgH);
+//            List<double> xPoints = new List<double>(imgW);
+//            List<double> xUpPoints = new List<double>(imgW);
+//            List<double> xBotPoints = new List<double>(imgW);
+//            List<int> derYMaxMinRange, derXMaxMinRange;
+//            int i = 0;
+//            List<double> ders;
+            
+//            double angle1, angle2;
+//            double diag;
+//            int xl = 0, xr = 0, lmax = 0, rmax = 0, lmin = 0, rmin = 0;
+                    
+//            Image<Gray, Byte> img = new Image<Gray, Byte>(image);
+//            Image<Gray, Byte> grayImg = new Image<Gray, Byte>(image);
+
+//            input.Image = img;
+            
+//            do
+//            {
+//                i++;
+
+//                yPoints = IntensityHorHist(img.Data, 0, imgH, 0, imgW);
+//                ders = Derivative(yPoints);
+
+//                BuildIntensityHist(yPoints, ders);
+
+//                derYMaxMinRange = DerivativeMaxMinRange(ders, 0, imgH / 2, imgH / 2, imgH);
+
+//                lmax = derYMaxMinRange[2];
+//                rmax = derYMaxMinRange[3];
+//                lmin = derYMaxMinRange[4];
+//                rmin = derYMaxMinRange[5];
+
+//                xPoints = IntensityVerHist(img.Data, lmax, rmin, 0, imgW);
+//                ders = Derivative(xPoints);
+
+//                //BuildIntensityHist(xPoints, ders);
+
+//                derXMaxMinRange = DerivativeMaxMinRange(ders, 0, imgW / 2, imgW / 2, imgW);
+//                xl = derXMaxMinRange[0];
+//                xr = derXMaxMinRange[1];
+//                int width = xr - xl;
+
+//                xUpPoints = IntensityVerHist(img.Data, lmax, rmax, 0, imgW);
+//                xBotPoints = IntensityVerHist(img.Data, lmin, rmin, 0, imgW);
+
+//                int indUp = xUpPoints.FindIndex(y => y == xUpPoints.Max());
+//                int indBot = xBotPoints.FindIndex(y => y == xBotPoints.Max());
+
+//                diag = Math.Sqrt(width * width + (lmax - rmax) * (lmax - rmax));
+//                angle1 = (180 / Math.PI) * Math.Acos((width * width + diag * diag - (lmax - rmax) * (lmax - rmax)) / (2.0 * width * diag));// *(indUp > imgW / 2 ? 1 : -1);
+
+//                diag = Math.Sqrt(width * width + (lmin - rmin) * (lmin - rmin));
+//                angle2 = (180 / Math.PI) * Math.Acos((width * width + diag * diag - (lmin - rmin) * (lmin - rmin)) / (2.0 * width * diag));// *(indBot > imgW / 2 ? -1 : 1);
+                                
+//                //int angle = gradsDiffBot.FindIndex(y => y == gradsDiffBot.Max());
+
+//                grayImg = img.Clone();
+
+//                LineSegment2D horizontalBot = new LineSegment2D(new Point(0, lmax), new Point(imgW - 1, lmax));
+//                grayImg.Draw(horizontalBot, new Gray(0), 2);
+
+//                LineSegment2D horizontalUp = new LineSegment2D(new Point(0, rmin), new Point(imgW - 1, rmin));
+//                grayImg.Draw(horizontalUp, new Gray(0), 2);
+
+//                LineSegment2D vereticalLeft = new LineSegment2D(new Point(xl, 0), new Point(xl, imgH - 1));
+//                grayImg.Draw(vereticalLeft, new Gray(0), 2);
+
+//                LineSegment2D vereticalRight = new LineSegment2D(new Point(xr, 0), new Point(xr, imgH - 1));
+//                grayImg.Draw(vereticalRight, new Gray(0), 2);
+
+//                input.Image = grayImg;
+
+//                img = img.Rotate((angle1 + angle2) / 2.0, img.GetAverage());
+//                //Image<Bgr, Byte> imgs = HorizontalHist(img);
+//                //derivativeAllColumns(img);
+
+//                output.Image = img;
+////                main.res = img;
+//            }
+//            //while (Math.Abs((angle1 + angle2) / 2.0) > 1);
+//            while (i < 1);
+////            main.res = img;
+//        }
+
+        //public Bitmap AlphaTrimmedMeanFilter(Image<Gray, Byte> img)
+        //{
+        //    int[,] arr = new int[img.Height, img.Width];
+        //    for (int i = 0; i < img.Height; i++)
+        //    {
+        //        for (int j = 0; j < img.Width; j++)
+        //        {
+        //            arr[i, j] = img.Data[i, j, 0];
+        //        }
+        //    }
+
+        //    int n = 3;
+        //    int d = 0;
+        //    int width = img.Width;
+        //    int height = img.Height;
+        //    int[,] result = new int[height, width];
+
+        //    int mid = (Resources.angleInterval / 2);
+
+        //    for (int i = 0; i < height; i++)
+        //    {
+        //        for (int j = 0; j < width; j++)
+        //        {
+
+        //            List<double> value = new List<double>();
+        //            for (int x = -1 * n / 2; x <= n / 2; x++)
+        //            {
+        //                for (int y = -1 * n / 2; y <= n / 2; y++)
+        //                {
+        //                    if (i + x >= 0 && i + x < height && j + y >= 0 && j + y < width)
+        //                        value.Add(arr[i + x, j + y]);
+        //                    else
+        //                        value.Add(0);
+        //                }
+        //            }
+        //            value.Sort();
+        //            int sum = 0;
+        //            for (int k = d / 2; k < n * n - d / 2; k++)
+        //                sum += (int)value[k];
+        //            result[i, j] = sum / (n * n - d);
+        //        }
+        //    }
+
+        //    Image<Gray, Byte> imgResult = img.Clone();
+
+        //    for (int i = 0; i < height; i++)
+        //    {
+        //        for (int j = 0; j < width; j++)
+        //        {
+        //            imgResult.Data[i, j, 0] = (Byte)(result[i, j]);
+        //        }
+        //    }
+        //    return imgResult.ToBitmap();
+
+        //}
+
+        //public List<int> DerivativeMaxMinRange(List<double> ders, int maxl, int maxr, int minl, int minr)
+        //{
+        //    int i;
+        //    double max = 0, min = 0;
+        //    int imax = 0, imin = 0, lmax, rmax, lmin, rmin;
+
+        //    for (i = maxl; i < maxr; i++)
+        //    {
+        //        if (ders[i] > max)
+        //        {
+        //            max = ders[i];
+        //            imax = i;
+        //        }
+        //    }
+
+        //    for (i = minl; i < minr; i++)
+        //    {
+        //        if (ders[i] < min)
+        //        {
+        //            min = ders[i];
+        //            imin = i;
+        //        }
+        //    }
+
+        //    lmax = imax;
+        //    while (ders[lmax] > 0 && lmax > 0)
+        //    {
+        //        lmax--;
+        //    }
+
+        //    rmax = imax;
+        //    while (ders[rmax] > 0 && rmax < ders.Count)
+        //    {
+        //        rmax++;
+        //    }
+
+        //    lmin = imin;
+        //    while (ders[lmin] < 0 && lmin > 0)
+        //    {
+        //        lmin--;
+        //    }
+
+        //    rmin = imin;
+        //    while (ders[rmin] < 0 && rmin < ders.Count - 1)
+        //    {
+        //        rmin++;
+        //    }
+
+        //    List<int> res = new List<int>(6);
+
+        //    res.Add(imax);
+        //    res.Add(imin);
+        //    res.Add(lmax);
+        //    res.Add(rmax);
+        //    res.Add(lmin);
+        //    res.Add(rmin);
+
+        //    return res;
+        //}
+
+        //public void DerivativeAllColumns(Image<Bgr, Byte> image)
+        //{
+        //    Bitmap img = image.ToBitmap();
+        //    int i, j;
+        //    int imgH = img.Height;
+        //    int imgW = img.Width;
+        //    List<List<double>> ders = new List<List<double>>(imgW);
+
+        //    for (i = 0; i < imgW; i++)
+        //    {
+        //        ders.Add(new List<double>(imgH));
+        //    }
+
+        //    for (i = 0; i < imgW; i++)
+        //    {
+        //        ders[i].Add(img.GetPixel(i, 1).B - img.GetPixel(i, 0).B);
+
+        //        for (j = 1; j < imgH - 1; j++)
+        //        {
+        //            ders[i].Add((double)(img.GetPixel(i, j + 1).B - img.GetPixel(i, j - 1).B) / 2.0);
+        //        }
+
+        //        ders[i].Add(img.GetPixel(i, imgH - 1).B - img.GetPixel(i, imgH - 2).B);
+        //    }
+
+        //    Bgr color = new Bgr(Color.Red);
+
+        //    double max = 0, min = 0, res = 0;
+        //    int index;
+
+        //    for (i = 0; i < imgW - 1; i++)
+        //    {
+        //        max = ders[i].Max();
+        //        min = ders[i].Min();
+        //        if (Math.Abs(max) > Math.Abs(min))
+        //        {
+        //            res = max;
+        //        }
+        //        else
+        //        {
+        //            res = min;
+        //        }
+
+        //        index = ders[i].FindIndex(y => y == res);
+        //        /*for (j = 0; j < imgH - 1; j++)
+        //        {
+        //            //chart2.Series[0].Points.AddY(ders[i][j]);
+                    
+        //        }*/
+
+        //        Cross2DF cr = new Cross2DF(new PointF(i, index), 0, 0);
+        //        image.Draw(cr, color, 1);
+        //    }
+        //}
+
+        //Find Rectangles with symbols inside (FindContours & BoundingRectangle)
+        //public Image<Bgr, Byte> FindChars(Image<Gray, Byte> img)
+        //{
+        //    Image<Bgr, Byte> plate = new Image<Bgr, byte>(img.ToBitmap());
+        //    Mat hr = new Mat();
+        //    VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint();
+
+        //    CvInvoke.FindContours(img, contours, hr, RetrType.Tree, ChainApproxMethod.ChainApproxNone);
+
+        //    for (int i = 0; i < contours.Size; i++)
+        //    {
+        //        MCvScalar color = new MCvScalar(0, 0, 255);
+        //        Rectangle rect = CvInvoke.BoundingRectangle(contours[i]);
+        //        if (rect.Height >= plate.Height * 0.45 && rect.Width < plate.Width * 0.19)
+        //            plate.Draw(rect, new Bgr(0, 0, 255), 2);
+        //    }
+        //    return plate;
+        //}
+
+        //public Image<Bgr, Byte> ShowPathes(Image<Gray, Byte> img, Image<Bgr, Byte> img1, int[] dersX)
+        //{
+        //    Image<Bgr, Byte> colorImg;
+
+        //    if (img1 != null)
+        //    {
+        //        colorImg = new Image<Bgr, byte>(img1.Clone().ToBitmap());
+        //    }
+        //    else 
+        //    {
+        //        colorImg = new Image<Bgr, byte>(img.Clone().ToBitmap());
+        //    }
+        //    List<Way> pathes = new List<Way>();
+
+        //    for (int i = 0; i < dersX.Length; i++)
+        //    {
+        //          Way path = new Way(img, 1.0, 1.4, dersX[i]);
+        //          path.AstarImpl();
+        //          pathes.Add(path);
+        //    }
+
+        //    for (int i = 0; i < dersX.Length; i++)
+        //    {
+        //        for (int k = 0; k < pathes[i].points.Count; k++)
+        //        {
+        //            Point p = pathes[i].points[k];
+        //            colorImg.Draw(new Cross2DF(new PointF(p.X, p.Y), 0, 0), new Bgr(0, 0, 255), 1);
+        //        }
+        //    }
+
+        //    return colorImg;
+        //}

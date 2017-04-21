@@ -1,4 +1,4 @@
-﻿namespace NumberPlateDetector
+﻿namespace ANPR
 {
     partial class Form1
     {

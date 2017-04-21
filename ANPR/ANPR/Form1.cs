@@ -22,7 +22,7 @@ using AForge.Imaging;
 using AForge.Imaging.Filters;
 
 
-namespace NumberPlateDetector
+namespace ANPR
 {
     public partial class Form1 : Form
     {

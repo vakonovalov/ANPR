@@ -21,7 +21,7 @@ using Accord.MachineLearning.VectorMachines.Learning;
 using AForge.Imaging;
 using AForge.Imaging.Filters;
 
-namespace NumberPlateDetector
+namespace ANPR
 {
     public class MemBox
     {
