@@ -1,23 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Windows.Forms;
 using Emgu.CV;
-using Emgu.Util;
 using Emgu.CV.Structure;
-using Emgu.CV.Features2D;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Util;
-using Emgu.CV.UI;
-using System.Threading;
-using System.Drawing.Imaging;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Diagnostics;
 
 namespace ANPR
 {
@@ -731,6 +719,34 @@ namespace ANPR
             }
 
             return segmentsImage;
+        }
+
+        private Image<Gray, Byte>[] SymbolsCutter(Image<Gray, Byte> img, int[] lines)
+        {
+            Image<Gray, Byte>[] symbols;
+            List<int> lns = lines.ToList();
+            lns.Sort();
+            if (lns[0] == 0)
+            {
+                lns.Remove(lns.First());
+            }
+
+            if (lns.Last() == img.Width - 1)
+            {
+                lns.Remove(lns.Last());
+            }
+            symbols = new Image<Gray, Byte>[lns.Count + 1];
+
+            symbols[0] = img.Copy(new Rectangle(0, 0, lns[0], img.Height));
+
+            for (int i = 0; i < lns.Count; i++)
+            {
+                symbols[i + 1] = img.Copy(new Rectangle(lns[i], 0, lns[i + 1], img.Height));   
+            }
+
+            symbols[lns.Count] = img.Copy(new Rectangle(lns[lns.Count - 1], 0, img.Width, img.Height));
+
+            return symbols;
         }
 
         private Image<Bgr, Byte> ShowHorizontalCroppedLines(Image<Gray, Byte> img, int[] upBot)

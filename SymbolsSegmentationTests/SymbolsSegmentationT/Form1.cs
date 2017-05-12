@@ -24,7 +24,7 @@ using System.Diagnostics;
 namespace SymbolsSegmentationT
 {
     public partial class Form1 : Form
-    {   
+    {
         public Form1()
         {
             InitializeComponent();
@@ -59,7 +59,12 @@ namespace SymbolsSegmentationT
 
             imageBox2.Image = plate;
 
-            SymbolsSegmentation(plate);
+            Image<Gray, Byte>[] symb = SymbolsSegmentation(plate);
+
+            for (int i = 0; i < symb.Length; i++)
+            {
+                symb[i].Save("D:\\rez\\" + i.ToString() + ".bmp");
+            }
 
             sWatch.Stop();
             string sec1 = ((double)sWatch.ElapsedTicks / (double)Stopwatch.Frequency).ToString();
@@ -433,6 +438,58 @@ namespace SymbolsSegmentationT
             return imgss.Convert<Gray, byte>();
         }
 
+        public Image<Gray, Byte> ConnectedComponentsDeleteAllExceptMax(Image<Gray, Byte> img)
+        {
+            Mat outputMat = new Mat();
+            Mat stats = new Mat();
+            Mat centroids = new Mat();
+
+            img._Not();
+
+            int s = CvInvoke.ConnectedComponentsWithStats(img.Mat, outputMat, stats, centroids, LineType.EightConnected);
+
+            int[] statsArr = new int[s * 5];
+            stats.CopyTo<int>(statsArr);
+
+            List<Byte> intensity = new List<Byte>(s);
+            intensity.Add(255);
+            double max = 0;
+            int index = 0;
+            for (int i = 1; i < s; i++)
+            {
+                if (statsArr[(i + 1) * 5 - 1] > max)
+                {
+                    max = statsArr[(i + 1) * 5 - 1];
+                    index = i;
+                }
+            }
+
+            for (int i = 1; i < s; i++)
+            {
+                if (i == index)
+                {
+                    intensity.Add(0);
+                }
+                else
+                {
+                    intensity.Add(255);
+                }                    
+            }
+
+            Image<Gray, Byte> imgss = outputMat.ToImage<Gray, Byte>();
+            int cl;
+
+            for (int i = 0; i < imgss.Height; i++)
+                for (int j = 0; j < imgss.Width; j++)
+                {
+                    cl = imgss.Data[i, j, 0];
+                    imgss.Data[i, j, 0] = intensity[cl];
+                }
+
+            return imgss;
+        }
+        
+
         /*Clear small connected component with different colours for classes*/
         public Image<Bgr, Byte> ConnectedCompsNoiseClearColor(Image<Gray, Byte> img, int area, bool invert, int smooth)
         {
@@ -610,7 +667,7 @@ namespace SymbolsSegmentationT
             return res;
         }
 
-        /*Normalize plate borders (use ConnectedCompsNoiseClearGray and MorphOperation.Close)*/
+        /*Normalize plate borders (use ConnectedCompsNoiseClearGray)*/
         public Image<Gray, Byte> NormalizeForPlateBorders(Image<Gray, Byte> img, int areaNormal, int areaInvert, int smooth)
         {
             Image<Gray, Byte> auxImg = img.Clone();
@@ -799,7 +856,71 @@ namespace SymbolsSegmentationT
             {
                 imageBox4.Image = segmentsImage;
             }
-            return null;
+            return SymbolsCutter(cropPlate, dersX);
+        }
+
+        private Image<Gray, Byte>[] SymbolsCutter(Image<Gray, Byte> img, int[] lines)
+        {
+            Image<Gray, Byte>[] symbols;
+            List<int> lns = lines.ToList();
+            List<Image<Gray, Byte>> symbs;
+            lns.Sort();
+            if (lns[0] == 0)
+            {
+                lns.Remove(lns.First());
+            }
+
+            if (lns.Last() == img.Width - 1)
+            {
+                lns.Remove(lns.Last());
+            }
+
+            symbols = new Image<Gray, Byte>[lns.Count + 1];
+            symbols[0] = img.Copy(new Rectangle(0, 0, lns[0], img.Height));
+
+            for (int i = 0; i < lns.Count - 1; i++)
+            {
+                symbols[i + 1] = img.Copy(new Rectangle(lns[i], 0, lns[i + 1] - lns[i], img.Height));
+            }
+
+            symbols[lns.Count] = img.Copy(new Rectangle(lns[lns.Count - 1], 0, img.Width - lns[lns.Count - 1], img.Height));
+
+            symbs = symbols.ToList();
+
+            for (int i = 0; i < symbols.Length; i++)
+            {
+                if (symbols[i].Width < (img.Width * Resources.smallNumbersWidthRatio) * 1.1)
+                {
+                    symbs.RemoveAt(i);
+                }
+            }
+
+            //resize all symbols to 40x52
+            for (int i = 0; i < symbs.Count; i++)
+            {
+                symbs[i] = symbs[i].Resize(40, 52, Inter.Cubic);
+                symbs[i] = symbs[i].MorphologyEx(MorphOp.Open, Resources.fullKernel5x5, new Point(-1, -1), 1, BorderType.Reflect, new MCvScalar(0));
+                //symbs[i]._EqualizeHist();
+                //CvInvoke.Threshold(symbs[i], symbs[i], 0, 255, ThresholdType.Otsu);
+
+                /*//symbs[i]._EqualizeHist();
+                Image<Gray, Byte> temp = symbs[i].Clone();
+
+                CvInvoke.GaussianBlur(temp, symbs[i], new Size(0, 0), 19);
+                CvInvoke.AddWeighted(temp, 100.0, symbs[i], -99.0, 0, symbs[i]);
+                CvInvoke.Threshold(symbs[i], symbs[i], 0, 255, ThresholdType.Otsu);
+                //symbs[i] = ConnectedCompsNoiseClearGray(symbs[i].Clone(), 200, true, 0);
+                //symbs[i] = symbs[i].MorphologyEx(MorphOp.Dilate, Resources.diskKernel3x3, new Point(-1, -1), 1, BorderType.Reflect, new MCvScalar(0));
+                symbs[i] = ConnectedCompsNoiseClearGray(symbs[i].Clone(), 50, true, 0);
+                symbs[i] = symbs[i].MorphologyEx(MorphOp.Close, Resources.diskKernel3x3, new Point(-1, -1), 1, BorderType.Reflect, new MCvScalar(0));
+                symbs[i] = ConnectedComponentsDeleteAllExceptMax(symbs[i]);
+                */
+
+
+
+            }
+      
+            return symbs.ToArray();
         }
         
         public Image<Bgr, Byte> ShowHorizontalCroppedLines(Image<Gray, Byte> img, int[] upBot)
@@ -1056,6 +1177,58 @@ namespace SymbolsSegmentationT
         //    }
 
         //    return colorImg;
+        //}
+
+        //Clear small connected component
+        //public Image<Gray, Byte> ConnectedCompsNoiseClearGray(Image<Gray, Byte> img, int area, bool invert, int smooth)
+        //{
+        //    Mat outputMat = new Mat();
+        //    Mat stats = new Mat();
+        //    Mat centroids = new Mat();
+
+        //    if (smooth > 0)
+        //        img._SmoothGaussian(smooth);
+
+        //    if (invert)
+        //    {
+        //        img._Not();
+        //    }
+
+        //    int s = CvInvoke.ConnectedComponentsWithStats(img.Mat, outputMat, stats, centroids, LineType.FourConnected);
+
+        //    int[] statsArr = new int[s * 5];
+        //    stats.CopyTo<int>(statsArr);
+
+        //    List<Color> colors = new List<Color>(s);
+        //    Random r = new Random();
+        //    colors.Add(Color.FromArgb(0, 0, 0));
+        //    for (int i = 1; i < s; i++)
+        //    {
+        //        if (statsArr[(i + 1) * 5 - 1] < area)
+        //        {
+        //            colors.Add(Color.FromArgb(0, 0, 0));
+        //        }
+        //        else
+        //        {
+        //            colors.Add(Color.FromArgb(255, 255, 255));
+        //        }
+        //    }
+
+        //    Image<Bgr, Byte> imgss = outputMat.ToImage<Bgr, Byte>();
+        //    int ind;
+
+        //    for (int i = 0; i < imgss.Height; i++)
+        //        for (int j = 0; j < imgss.Width; j++)
+        //        {
+        //            ind = imgss.Data[i, j, 0];
+        //            imgss.Data[i, j, 0] = colors[ind].B;
+        //            imgss.Data[i, j, 1] = colors[ind].G;
+        //            imgss.Data[i, j, 2] = colors[ind].R;
+        //        }
+
+        //    if (invert)
+        //        return (imgss.Convert<Gray, byte>()).Not();
+        //    return imgss.Convert<Gray, byte>();
         //}
     }
 }

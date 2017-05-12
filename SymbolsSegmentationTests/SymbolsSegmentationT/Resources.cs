@@ -36,6 +36,12 @@ namespace SymbolsSegmentationT
                                                                                         { 0, 0, 1, 0, 0}, 
                                                                                         { 0, 0, 1, 0, 0}});
 
+        static public Matrix<byte> fullKernel5x5 = new Matrix<byte>(new byte[5, 5] {    { 0, 1, 1, 1, 0}, 
+                                                                                        { 1, 1, 1, 1, 1}, 
+                                                                                        { 1, 1, 1, 1, 1},
+                                                                                        { 1, 1, 1, 1, 1}, 
+                                                                                        { 0, 1, 1, 1, 0}});
+
         static public Matrix<byte> verLineKernel7x7 = new Matrix<byte>(new byte[7, 7] { { 0, 0, 0, 1, 0, 0, 0}, 
                                                                                         { 0, 0, 0, 1, 0, 0, 0}, 
                                                                                         { 0, 0, 0, 1, 0, 0, 0},
@@ -43,6 +49,14 @@ namespace SymbolsSegmentationT
                                                                                         { 0, 0, 0, 1, 0, 0, 0},
                                                                                         { 0, 0, 0, 1, 0, 0, 0},
                                                                                         { 0, 0, 0, 1, 0, 0, 0}});
+
+        static public Matrix<byte> fullLineKernel7x7 = new Matrix<byte>(new byte[7, 7] { { 1, 1, 1, 1, 1, 1, 1}, 
+                                                                                         { 1, 1, 1, 1, 1, 1, 1}, 
+                                                                                         { 1, 1, 1, 1, 1, 1, 1},
+                                                                                         { 1, 1, 1, 1, 1, 1, 1}, 
+                                                                                         { 1, 1, 1, 1, 1, 1, 1},
+                                                                                         { 1, 1, 1, 1, 1, 1, 1},
+                                                                                         { 1, 1, 1, 1, 1, 1, 1}});
 
 
         static public Matrix<byte> horizontalKernel5x5 = new Matrix<byte>(new byte[5, 5] {{ 0, 0, 0, 0, 0}, 
