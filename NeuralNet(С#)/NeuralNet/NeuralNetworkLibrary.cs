@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
@@ -36,9 +36,14 @@ namespace NeuralNetworkLibrary
     public static class CostFunctions
     {
         //define the log-likelihood cost function C = -ln(a)
-        public static double LogLikelihood(double value)
+        public static double LogLikelihood(double[] y, double[] o)
         {
-            return -Math.Log(value);
+            int ind = 0;
+            while (y[ind] < 0.01)
+            {
+                ind++;
+            }
+            return -Math.Log(o[ind]);
         }
 
         public static double MeanSquareError(double[] y, double[] o)
@@ -52,6 +57,7 @@ namespace NeuralNetworkLibrary
         }       
     }
 
+    [Serializable]
     public abstract class AbstractLayerNW
     {
         protected int inputCount;
@@ -180,8 +186,8 @@ namespace NeuralNetworkLibrary
             get { return gradInput; }
             set { gradInput = value; }
         }
-        
-        public abstract void GenerateWeights();
+
+        public abstract void GenerateWeights(bool wiseMode = true);
 
         protected abstract void Init();
 
@@ -225,15 +231,24 @@ namespace NeuralNetworkLibrary
         }
 
         // Заполняем веса случайными числами для входного изображения с интенсивностями 0-255
-        public override void GenerateWeights()
+        public override void GenerateWeights(bool wiseMode = true)
         {
             Random rnd = new Random();
+            double d, bound;
+            d = 1.0 / (double)inputCount;
+            bound = Math.Sqrt(3.0 * d);
+
             for (int i = 0; i < InputCount; i++)
             {
                 for (int j = 0; j < OutputCount; j++)
                 {
-                   weights[i, j] = 0.02346038*rnd.NextDouble() - 0.011730188;
+                    weights[j, i] = (wiseMode) ? 2 * bound * rnd.NextDouble() - bound : ((double)rnd.Next(0, 1000) / 1000.0) - 0.5;
                 }
+            }
+
+            for (int j = 0; j < OutputCount; j++)
+            {
+                biases[j] = 0;
             }
         }
 
@@ -262,7 +277,7 @@ namespace NeuralNetworkLibrary
             Matrix<double> w = Matrix<double>.Build.DenseOfArray(Weights);
             Vector<double> z = Vector<double>.Build.DenseOfArray(inputWeighted);
             Vector<double> gradOut = Vector<double>.Build.DenseOfArray(gradOutput);
-            Vector<double> derSigmoid = z.Map<double>(f => f*(1-f));
+            Vector<double> derSigmoid = z.Map<double>(f => ActivationFunctions.Sigmoid(f) * (1 - ActivationFunctions.Sigmoid(f)));
             Vector<double> d;
 
             d = gradOut.PointwiseMultiply(derSigmoid);           
@@ -280,7 +295,7 @@ namespace NeuralNetworkLibrary
             Vector<double> b = Vector<double>.Build.DenseOfArray(biases);
             Vector<double> z = w.Multiply(a) + b;
 
-            input = a.ToArray();
+            this.input = a.ToArray();
             inputWeighted = z.ToArray();
             z = z.Map<double>(f => ActivationFunctions.Sigmoid(f));
             OutputActivations = z.ToArray();
@@ -291,7 +306,7 @@ namespace NeuralNetworkLibrary
             Vector<double> a = Vector<double>.Build.DenseOfArray(input);
             Vector<double> d = Vector<double>.Build.DenseOfArray(delta);
 
-            gradWeights = a.OuterProduct(d).ToArray();
+            gradWeights = d.OuterProduct(a).ToArray();
             gradBiases = delta;
         }
 
@@ -423,15 +438,21 @@ namespace NeuralNetworkLibrary
         }
 
         // Заполняем веса случайными числами
-        public override void GenerateWeights()
+        public override void GenerateWeights(bool wiseMode = true)
         {
+            Random rnd = new Random();
+            double d, bound;
+            d = 1.0 / (double)(inputCount*inputCount);
+            bound = Math.Sqrt(3.0 * d);
+
             for (int i = 0; i < InputCount; i++)
             {
                 for (int j = 0; j < OutputCount; j++)
                 {
-                    weights[i, j] = 0;
+                    weights[j, i] = (wiseMode) ? 2 * bound * rnd.NextDouble() - bound : ((double)rnd.Next(0, 1000) / 1000.0) - 0.5;
                 }
             }
+
             for (int j = 0; j < OutputCount; j++)
             {
                 biases[j] = 0;
@@ -457,7 +478,7 @@ namespace NeuralNetworkLibrary
             Vector<double> b = Vector<double>.Build.DenseOfArray(biases);
             Vector<double> z = w.Multiply(a) + b;
 
-            input = a.ToArray();
+            this.input = a.ToArray();
             inputWeighted = z.ToArray();
 
             for (int i = 0; i < z.Count; i++)
@@ -472,7 +493,7 @@ namespace NeuralNetworkLibrary
             Vector<double> a = Vector<double>.Build.DenseOfArray(input);
             Vector<double> d = Vector<double>.Build.DenseOfArray(delta);
 
-            gradWeights = a.OuterProduct(d).ToArray();
+            gradWeights = d.OuterProduct(a).ToArray();
             gradBiases = delta;
         }
 
@@ -487,8 +508,13 @@ namespace NeuralNetworkLibrary
     public class NeuralNW
     {
         private AbstractLayerNW[] layers;
-        int countLayers = 0, countInput, countOutput;
-
+        private int countLayers = 0, countInput, countOutput;
+        private Matrix<double>[] gradWeightsAux;
+        private Vector<double>[] gradBiasesAux;
+        private Matrix<double>[] cache;
+        private int[] indices;
+        public List<double> errors = new List<double>();
+        
         /* создает полносвязанную сеть из n слоев. 
            sizex - размерность вектора входных параметров
            layers - массив слоев. значение элементов массива - количество нейронов в слое               
@@ -498,6 +524,13 @@ namespace NeuralNetworkLibrary
             countLayers = layers.Count;
             countInput = sizeInput;
             countOutput = layers[layers.Count - 1].OutputCount;
+
+            this.layers = new AbstractLayerNW[layers.Count];
+
+            for (int i = 0; i < countLayers; i++)
+            {
+                this.layers[i] = layers[i];
+            }
 
             // заполняем веса слоя случайнымичислами
             for (int i = 0; i < countLayers; i++)
@@ -511,9 +544,32 @@ namespace NeuralNetworkLibrary
         {
            OpenNW(filename);
         }
+        
+        //перемешивание индексов для формирования случайных mini batch
+        private int[] Shuffle(int count)
+        {
+            Random r = new Random();
+            int[] indices = new int[count];
+            int n = count;
 
+            for (int i = 0; i < n; i++ )
+            {
+                indices[i] = i;
+            }
+
+            while (n > 1) 
+            {  
+                n--;
+                int k = r.Next(n + 1);
+                int value = indices[k];
+                indices[k] = indices[n];
+                indices[n] = value;  
+            }  
+            return indices;
+        }
+       
         // открывает нс
-        public void OpenNW(string filename)
+        public static NeuralNW OpenNW(string filename)
         {
             FileStream fs = new FileStream(filename, FileMode.Open);
             NeuralNW nw;
@@ -532,10 +588,7 @@ namespace NeuralNetworkLibrary
                 fs.Close();
             }
 
-            this.layers = nw.layers;
-            this.countLayers = nw.countLayers;
-            this.countInput = nw.countInput;
-            this.countOutput = nw.countOutput;
+            return nw;
         }
 
         // сохраняет нс
@@ -580,7 +633,7 @@ namespace NeuralNetworkLibrary
 
             layers[countLayers - 1].BackPropagate(networkOutput);
 
-            for (int i = countLayers - 2; i > 0; i--)
+            for (int i = countLayers - 2; i >= 0; i--)
             {
                 layers[i].BackPropagate(layers[i + 1].GradInput);
             }
@@ -607,29 +660,46 @@ namespace NeuralNetworkLibrary
         // возвращает ошибку (метод наименьших квадратов)
         public double CalculateError(double[] y)
         {
-            return CostFunctions.MeanSquareError(y, layers[countLayers - 1].OutputActivations);
+            return CostFunctions.LogLikelihood(y, layers[countLayers - 1].OutputActivations);
         }
 
-        /* обучает сеть, изменяя ее весовые коэффициэнты. 
-           x, y - обучающая пара. klern - скорость обучаемости
-           в качестве результата метод возвращает ошибку 0.5(y-outy)^2 */
+        /* инициализирует сеть, изменяя ее весовые коэффициэнты. 
+           x, y - обучающая пара.
+         */
         //Первый индекс у массивов - номер входного примера
-        public double LearnNW(double[][] input, double[][] trueOutput, double klearn, int miniBatchSize)
+        public void LearnNWInit(double[][] input, double[][] trueOutput) 
+        {
+            gradWeightsAux = new Matrix<double>[countLayers];
+            gradBiasesAux = new Vector<double>[countLayers];
+            cache = new Matrix<double>[countLayers];
+
+            for (int l = 0; l < countLayers; l++)
+            {
+                gradWeightsAux[l] = Matrix<double>.Build.Dense(layers[l].GradWeights.GetLength(0), layers[l].GradWeights.GetLength(1), 0);
+                gradBiasesAux[l] = Vector<double>.Build.Dense(layers[l].GradBiases.Length, 0);
+                cache[l] = Matrix<double>.Build.Dense(layers[l].GradWeights.GetLength(0), layers[l].GradWeights.GetLength(1), 0);
+            }
+
+            indices = Shuffle(input.Length);
+        }
+
+        /* обучает сеть, изменяя ее весовые коэффициэнты. (стандартный метод) 
+         *   x, y - обучающая пара. 
+         *   klern - скорость обучаемости
+         */
+        //Первый индекс у массивов - номер входного примера
+        public void LearnNWStep(double[][] input, double[][] trueOutput, double klearn)
         {
             int i, j, k, l;
-            int[] indices = new int[miniBatchSize];
-
-            Matrix<double>[] gradWeights = new Matrix<double>[countLayers];
-            Vector<double>[] gradBiases = new Vector<double>[countLayers];
-
-            Matrix<double> gW;
-            Vector<double> gB;
 
             for (l = 0; l < countLayers; l++)
             {
-                gradWeights[l] = Matrix<double>.Build.Dense(layers[l].GradWeights.GetLength(0), layers[l].GradWeights.GetLength(1), 0);
-                gradBiases[l] = Vector<double>.Build.Dense(layers[l].GradBiases.Length, 0);
+                gradWeightsAux[l].Clear();
+                gradBiasesAux[l].Clear();
             }
+            
+            Matrix<double> gW;
+            Vector<double> gB;
 
             for (i = 0; i < input.Length; i++)
             {
@@ -642,9 +712,15 @@ namespace NeuralNetworkLibrary
                     gW = Matrix<double>.Build.DenseOfArray(layers[l].GradWeights);
                     gB = Vector<double>.Build.DenseOfArray(layers[l].GradBiases);
 
-                    gradWeights[l] = gradWeights[l].Add(gW);
-                    gradBiases[l] = gradBiases[l].Add(gB);
+                    gradWeightsAux[l] = gradWeightsAux[l].Add(gW);
+                    gradBiasesAux[l] = gradBiasesAux[l].Add(gB);
                 }
+            }
+
+            //Adagrad
+            for (l = 0; l < countLayers; l++)
+            {
+                cache[l] = cache[l].Add(gradWeightsAux[l].PointwisePower(2));
             }
 
             Matrix<double> w;
@@ -655,14 +731,145 @@ namespace NeuralNetworkLibrary
                 w = Matrix<double>.Build.DenseOfArray(layers[l].Weights);
                 b = Vector<double>.Build.DenseOfArray(layers[l].Biases);
 
-                w = w.Subtract(gradWeights[l].Multiply(klearn / input.Length));
-                b = b.Subtract(gradBiases[l].Multiply(klearn / input.Length));
+                //w = w.Subtract(gradWeightsAux[l].Multiply(klearn / input.Length));
+                w = w.Subtract(gradWeightsAux[l].Multiply(klearn / input.Length).PointwiseDivide(cache[l].PointwiseSqrt().Add(0.00001)));
+                b = b.Subtract(gradBiasesAux[l].Multiply(klearn / input.Length));
 
                 layers[l].Weights = w.ToArray();
                 layers[l].Biases = b.ToArray();
             }
 
-            return CalculateError(trueOutput[i]);
+            return;
+        }
+
+        /* обучает сеть, изменяя ее весовые коэффициэнты. (разбитие обучающей выборки на партии) 
+         *   x, y - обучающая пара. 
+         *   klern - скорость обучаемости
+         *   miniBatchSize - размер партии тренировочных изображений
+         *   decayRate - скорость снижения значений в cache
+         */
+        //Первый индекс у массивов - номер входного примера
+        public void LearnNWStep(double[][] input, double[][] trueOutput, double klearn, int miniBatchSize, double decayRate = 0.99)
+        {
+            if (miniBatchSize < 1 || miniBatchSize > input.Length)
+            {
+                return;
+            }
+
+            int i, j, k, l;
+            Matrix<double> gW;
+            Vector<double> gB;
+
+            for (l = 0; l < countLayers; l++)
+            {
+                gradWeightsAux[l].Clear();
+                gradBiasesAux[l].Clear();
+            }
+
+            int batchCount = input.Length / miniBatchSize;
+            
+            if (input.Length % miniBatchSize > 0)
+            {
+                batchCount++;
+            }
+
+            int begin, end, batchIndex;
+            Random r = new Random();
+            batchIndex = r.Next(batchCount);
+            begin = batchIndex * miniBatchSize;
+            end = (batchIndex + 1) * miniBatchSize;
+
+            if (end > input.Length)
+            {
+                end = input.Length;
+            }
+
+            for (i = begin; i < end; i++)
+            {
+                CalculateOutput(input[indices[i]]);
+                CalculateDelta(trueOutput[indices[i]]);
+                CalculateGrad();
+
+                for (l = 0; l < countLayers; l++)
+                {
+                    gW = Matrix<double>.Build.DenseOfArray(layers[l].GradWeights);
+                    gB = Vector<double>.Build.DenseOfArray(layers[l].GradBiases);
+
+                    gradWeightsAux[l] = gradWeightsAux[l].Add(gW);
+                    gradBiasesAux[l] = gradBiasesAux[l].Add(gB);
+                }
+            }
+
+            //Adagrad
+            for (l = 0; l < countLayers; l++)
+            {
+                //cache[l] = cache[l].Add(gradWeightsAux[l].PointwisePower(2));
+                cache[l] = cache[l].Multiply(decayRate) + (gradWeightsAux[l].PointwisePower(2).Multiply(1.0 - decayRate));
+            }
+
+            Matrix<double> w;
+            Vector<double> b;
+
+            for (l = 0; l < countLayers; l++)
+            {
+                w = Matrix<double>.Build.DenseOfArray(layers[l].Weights);
+                b = Vector<double>.Build.DenseOfArray(layers[l].Biases);
+
+//                w = w.Subtract(gradWeightsAux[l].Multiply(klearn / miniBatchSize));
+                w = w.Subtract(gradWeightsAux[l].Multiply(klearn / miniBatchSize).PointwiseDivide(cache[l].PointwiseSqrt().Add(0.00001)));
+
+                b = b.Subtract(gradBiasesAux[l].Multiply(klearn / miniBatchSize));
+
+                layers[l].Weights = w.ToArray();
+                layers[l].Biases = b.ToArray();
+            }
+
+            return;
+        }
+
+        public void LearnNWError(double[][] input, double[][] trueOutput, double accuracyLimit, out double errorSum, out double accuracyRate)
+        {
+            errorSum = 0;
+            double error, max;
+            int success = 0;
+            int indTrue, indExp;
+
+            for (int i = 0; i < input.Length; i++)
+            {
+                CalculateOutput(input[i]);
+                error = CalculateError(trueOutput[i]);
+                errorSum += error;
+
+                max = NetOut()[0];
+                indExp = 0;
+                for (int j = 1; j < NetOut().Length; j++)
+                {
+                    if (NetOut()[j] > max)
+                    {
+                        max = NetOut()[j];
+                        indExp = j;
+                    }
+                }
+
+                max = trueOutput[i][0];
+                indTrue = 0;
+                for (int j = 1; j < trueOutput[i].Length; j++)
+                {
+                    if (trueOutput[i][j] > max)
+                    {
+                        max = trueOutput[i][j];
+                        indTrue = j;
+                    }
+                }                                
+
+                //if (error < accuracyLimit)
+                if (indExp == indTrue)
+                {
+                    success++;
+                }
+            }
+
+            accuracyRate = (double)success / (double)input.Length;
         }
 
         public int CountLayers

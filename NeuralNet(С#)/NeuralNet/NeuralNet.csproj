@@ -67,6 +67,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Windows.Forms.DataVisualization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -83,6 +84,12 @@
     <Compile Include="DatsSet.Designer.cs">
       <DependentUpon>DatsSet.cs</DependentUpon>
     </Compile>
+    <Compile Include="ErrorGraph.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ErrorGraph.Designer.cs">
+      <DependentUpon>ErrorGraph.cs</DependentUpon>
+    </Compile>
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -90,7 +97,14 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="IdxFileParser.cs" />
+    <Compile Include="Indicate.cs" />
     <Compile Include="LinealAlgebraOperationts.cs" />
+    <Compile Include="NetCreate.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="NetCreate.Designer.cs">
+      <DependentUpon>NetCreate.cs</DependentUpon>
+    </Compile>
     <Compile Include="NeuralNetCreate.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -103,8 +117,14 @@
     <EmbeddedResource Include="DatsSet.resx">
       <DependentUpon>DatsSet.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ErrorGraph.resx">
+      <DependentUpon>ErrorGraph.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="NetCreate.resx">
+      <DependentUpon>NetCreate.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="NeuralNetCreate.resx">
       <DependentUpon>NeuralNetCreate.cs</DependentUpon>
@@ -128,6 +148,18 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <None Include="train folder\TestSetImageFile.idx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="train folder\TestSetLabelFile.idx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="train folder\TraningSetImageFile.idx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="train folder\TraningSetLabelFile.idx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -140,6 +172,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

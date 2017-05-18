@@ -104,7 +104,7 @@ namespace NeuralNet
 
 	    public int dim(int idx) { return m_arrDim[idx]; }
 
-	    public int readData(int index, Byte[] data, int maxSize = -1)
+	    public int readData(int index, ref Byte[] data, int maxSize = -1)
         {
             if (!m_fGood)
                 return -1;
@@ -113,8 +113,9 @@ namespace NeuralNet
 
             if (File.Exists(m_strFilename))
             {
-                //fStream.Close();
-                //fStream = new FileStream(m_strFilename, FileMode.Open);
+
+                //FileStream fStream = new FileStream(m_strFilename, FileMode.Open);
+                //BinaryReader reader = new BinaryReader(File.Open(m_strFilename, FileMode.Open));
                 BinaryReader reader = new BinaryReader(File.Open(m_strFilename, FileMode.Open));
                 // check header
                 int magicNumToCheck = -1;
@@ -133,7 +134,7 @@ namespace NeuralNet
                 if (m_fGood)
                 {
                     read = reader.Read(data, 0, m_nItemSize);
-                    if (read == m_nItemSize)
+                    if (read != m_nItemSize)
                     {
                         return -1;
                     }
@@ -152,17 +153,13 @@ namespace NeuralNet
 
             if (File.Exists(m_strFilename))
             {
-                // check header
-                //fStream.Close();
-                //fStream = new FileStream(m_strFilename, FileMode.Open);
-                BinaryReader reader = new BinaryReader(File.Open(m_strFilename, FileMode.Open));//File.Open(m_strFilename, FileMode.Open));
+                BinaryReader reader = new BinaryReader(File.Open(m_strFilename, FileMode.Open));
                 int magicNumToCheck = -1;
                 magicNumToCheck = reader.ReadInt32();
                 m_arrDim[0] = reader.ReadInt32();
                 m_arrDim[0] = IPAddress.NetworkToHostOrder(m_arrDim[0]);
                 reader.Close();
 
-                //fStream = new FileStream(m_strFilename, FileMode.Append);
                 BinaryWriter writer = new BinaryWriter(File.Open(m_strFilename, FileMode.Open));
                 if (m_nMagicNumber != magicNumToCheck)
                 {
@@ -171,8 +168,6 @@ namespace NeuralNet
                     return -1;
                 }
 
-                // write item
-                //write = 0;
                 m_fGood = (writer.BaseStream.Length == writer.Seek(0, SeekOrigin.End));
                 if (m_fGood)
                 {
