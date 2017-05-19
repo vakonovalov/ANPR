@@ -718,6 +718,10 @@ namespace ANPR
                 segmentsImage.Draw(verical, new Bgr(0, 255, 0), 1);
             }
 
+            Image<Gray, Byte>[] imgs;
+
+            imgs = SymbolsCutter(auxSharpImg, dersX);
+
             return segmentsImage;
         }
 

@@ -61,9 +61,40 @@ namespace SymbolsSegmentationT
 
             Image<Gray, Byte>[] symb = SymbolsSegmentation(plate);
 
+            ImageList imgs = new ImageList();
+            imgs.ImageSize = new Size(40, 52);
+
+            //for (int i = 0; i < symb.Length; i++)
+            //{
+              //  imgs.Images.Add(symb[i].ToBitmap());
+            //}
+
+            listView1.Items.Clear();
+            listView1.LargeImageList = null;
+            listView1.LargeImageList = imgs;
+
             for (int i = 0; i < symb.Length; i++)
             {
-                symb[i].Save("D:\\rez\\" + i.ToString() + ".bmp");
+                Image<Gray, Byte> img = symb[i].Clone();
+                //symb[i]._EqualizeHist();
+                CvInvoke.GaussianBlur(img, img, new Size(0, 0), 7);
+                CvInvoke.AddWeighted(symb[i], 100.0, img, -99.0, 0, img);
+                CvInvoke.Threshold(img, img, 0, 255, ThresholdType.Otsu & ThresholdType.Binary);
+                img = NormalizeForPlateBorders(img, 10, 50, 0);
+                img.Save("D:\\rez\\" + i.ToString() + ".bmp");
+                //CvInvoke.GaussianBlur(auxImg, auxSharpImg, new Size(0, 0), 9);
+               // CvInvoke.AddWeighted(auxImg, 100.0, auxSharpImg, -99.0, 0, auxSharpImg);
+
+               // CvInvoke.Threshold(auxSharpImg, auxSharpImg, 0, 255, ThresholdType.Otsu & ThresholdType.Binary);
+
+                //auxSharpImg = ConnectedCompsNoiseClearGray(auxSharpImg.Clone(), areaNormal, false, smooth);
+                //auxSharpImg = ConnectedCompsNoiseClearGray(auxSharpImg.Clone(), areaInvert, true, smooth);
+
+                imgs.Images.Add(img.ToBitmap());
+                ListViewItem item = new ListViewItem();
+                item.ImageIndex = i;
+                listView1.Items.Add(item);
+
             }
 
             sWatch.Stop();
@@ -489,7 +520,6 @@ namespace SymbolsSegmentationT
             return imgss;
         }
         
-
         /*Clear small connected component with different colours for classes*/
         public Image<Bgr, Byte> ConnectedCompsNoiseClearColor(Image<Gray, Byte> img, int area, bool invert, int smooth)
         {

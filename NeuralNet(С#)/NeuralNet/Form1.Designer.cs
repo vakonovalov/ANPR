@@ -45,6 +45,9 @@
             this.button1 = new System.Windows.Forms.Button();
             this.log = new System.Windows.Forms.ListBox();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.acc = new System.Windows.Forms.TextBox();
+            this.label10 = new System.Windows.Forms.Label();
+            this.button9 = new System.Windows.Forms.Button();
             this.clsCountBox = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.x = new System.Windows.Forms.Label();
@@ -77,7 +80,6 @@
             this.probability = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.label3 = new System.Windows.Forms.Label();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
-            this.button9 = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).BeginInit();
@@ -200,6 +202,8 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.acc);
+            this.panel1.Controls.Add(this.label10);
             this.panel1.Controls.Add(this.button9);
             this.panel1.Controls.Add(this.clsCountBox);
             this.panel1.Controls.Add(this.label2);
@@ -229,6 +233,32 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(412, 287);
             this.panel1.TabIndex = 7;
+            // 
+            // acc
+            // 
+            this.acc.Location = new System.Drawing.Point(200, 115);
+            this.acc.Name = "acc";
+            this.acc.Size = new System.Drawing.Size(52, 20);
+            this.acc.TabIndex = 28;
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(139, 117);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(55, 13);
+            this.label10.TabIndex = 27;
+            this.label10.Text = "Accuracy:";
+            // 
+            // button9
+            // 
+            this.button9.Location = new System.Drawing.Point(309, 84);
+            this.button9.Name = "button9";
+            this.button9.Size = new System.Drawing.Size(67, 26);
+            this.button9.TabIndex = 26;
+            this.button9.Text = "Error graph";
+            this.button9.UseVisualStyleBackColor = true;
+            this.button9.Click += new System.EventHandler(this.button9_Click);
             // 
             // clsCountBox
             // 
@@ -507,16 +537,6 @@
             this.label3.TabIndex = 7;
             this.label3.Text = "Testing";
             // 
-            // button9
-            // 
-            this.button9.Location = new System.Drawing.Point(309, 84);
-            this.button9.Name = "button9";
-            this.button9.Size = new System.Drawing.Size(67, 26);
-            this.button9.TabIndex = 26;
-            this.button9.Text = "Error graph";
-            this.button9.UseVisualStyleBackColor = true;
-            this.button9.Click += new System.EventHandler(this.button9_Click);
-            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -597,6 +617,8 @@
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label testID;
         private System.Windows.Forms.Button button9;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.TextBox acc;
     }
 }
 

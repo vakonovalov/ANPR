@@ -381,7 +381,7 @@ namespace NeuralNetworkLibrary
     //    {
     //        //OutputActivations = LinealAlgebraOperationts.Convolution();
 
-            
+
     //        Matrix<double> w = Matrix<double>.Build.DenseOfArray(weights);
     //        Vector<double> a = Vector<double>.Build.DenseOfArray(input);
     //        Vector<double> b = Vector<double>.Build.DenseOfArray(biases);
@@ -411,7 +411,6 @@ namespace NeuralNetworkLibrary
 
 
     //SoftMax слой (выходной)
-
     [Serializable]
     public class SoftMaxLayer : AbstractLayerNW
     {

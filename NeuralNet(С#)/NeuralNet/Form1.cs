@@ -45,7 +45,7 @@ namespace NeuralNet
         private bool netReady;
         private int setIterator = 0;
         private bool isRunned;
-        
+                
         public Form1()
         {
             InitializeComponent();
@@ -67,6 +67,7 @@ namespace NeuralNet
             imageWidth.Text = "40";
             imageHeight.Text = "52";
             clsCountBox.Text = "21";
+            acc.Text = "0,95";
             Indicate.pic1 = pictureBox1;
             Indicate.pic2 = pictureBox2;
             Indicate.pic3 = pictureBox3;
@@ -398,6 +399,8 @@ namespace NeuralNet
 
             int epoch = int.Parse(textBox4.Text);
 
+            double accRate = double.Parse(acc.Text);
+
             isRunned = true;
             for (int i = 0; i < epoch; i++)
             {
@@ -417,13 +420,13 @@ namespace NeuralNet
                     log.Items.Add("IterTest: " + i + " Error: " + errorSum + " Accuracy: " + accuracyRate);
                     Led(Lamps.error, false);
                 }
-               
-                if (accuracyRate > 0.95)
-                    break;
 
                 network.SaveNW(trainFilesDir + "\\network.nw");
                 log.TopIndex = log.Items.Count - 1;
                 Application.DoEvents();
+
+                //if (accuracyRate > accRate)
+                  //  break;
 
                 if (!isRunned)
                 {
