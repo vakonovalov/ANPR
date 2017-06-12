@@ -22,3 +22,6 @@ C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x64\Debug\ANPR.Properties.R
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x64\Debug\ANPR.csproj.GenerateResource.Cache
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x64\Debug\ANPR.exe
 C:\Users\aeronet\Documents\GitHub\ANPR\ANPR\ANPR\obj\x64\Debug\ANPR.pdb
+C:\Users\юзер\Documents\GitHub\ANPR\ANPR\ANPR\bin\x64\Debug\ANPR.exe.config
+C:\Users\юзер\Documents\GitHub\ANPR\ANPR\ANPR\obj\x64\Debug\ANPR.exe
+C:\Users\юзер\Documents\GitHub\ANPR\ANPR\ANPR\obj\x64\Debug\ANPR.pdb

@@ -25,3 +25,6 @@ C:\Users\aeronet\Documents\GitHub\ANPR\NeuralNet(С#)\NeuralNet\obj\x64\Release\
 C:\Users\aeronet\Documents\GitHub\ANPR\NeuralNet(С#)\NeuralNet\obj\x64\Release\NeuralNet.csproj.GenerateResource.Cache
 C:\Users\aeronet\Documents\GitHub\ANPR\NeuralNet(С#)\NeuralNet\obj\x64\Release\NeuralNet.exe
 C:\Users\aeronet\Documents\GitHub\ANPR\NeuralNet(С#)\NeuralNet\obj\x64\Release\NeuralNet.pdb
+C:\Users\юзер\Documents\GitHub\ANPR\NeuralNet(С#)\NeuralNet\bin\x64\Release\NeuralNet.exe.config
+C:\Users\юзер\Documents\GitHub\ANPR\NeuralNet(С#)\NeuralNet\obj\x64\Release\NeuralNet.exe
+C:\Users\юзер\Documents\GitHub\ANPR\NeuralNet(С#)\NeuralNet\obj\x64\Release\NeuralNet.pdb
