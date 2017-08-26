@@ -18,9 +18,18 @@ namespace SymbolsSegmentationT
 {
     static class Resources
     {
-        static public Matrix<byte> diskKernel3x3 = new Matrix<byte>(new byte[3, 3] {{ 0, 1, 0 }, 
+
+        static public Matrix<byte> boxKernel3x3 = new Matrix<byte>(new byte[3, 3] {{ 1, 1, 1 }, 
+                                                                                   { 1, 1, 1 }, 
+                                                                                   { 1, 1, 1 }});
+
+        static public Matrix<byte> ringKernel3x3 = new Matrix<byte>(new byte[3, 3] {{ 0, 1, 0 }, 
                                                                                     { 1, 0, 1 }, 
                                                                                     { 0, 1, 0 }});
+
+        static public Matrix<byte> diskKernel3x3 = new Matrix<byte>(new byte[3, 3] {{ 0, 1, 0 }, 
+                                                                                   { 1, 1, 1 }, 
+                                                                                   { 0, 1, 0 }});
 
         static public Matrix<byte> horLineKernel3x3 = new Matrix<byte>(new byte[3, 3] {{ 0, 0, 0 }, 
                                                                                        { 1, 1, 1 }, 
@@ -30,40 +39,57 @@ namespace SymbolsSegmentationT
                                                                                        { 0, 1, 0 }, 
                                                                                        { 0, 1, 0 }});
 
+        static public Matrix<byte> crossLineKernel3x3 = new Matrix<byte>(new byte[3, 3] {{ 0, 1, 0 }, 
+                                                                                         { 1, 1, 1 }, 
+                                                                                         { 0, 1, 0 }});
+
+        static public Matrix<byte> boxKernel5x5 = new Matrix<byte>(new byte[5, 5] {{ 1, 1, 1, 1, 1}, 
+                                                                                   { 1, 1, 1, 1, 1}, 
+                                                                                   { 1, 1, 1, 1, 1},
+                                                                                   { 1, 1, 1, 1, 1}, 
+                                                                                   { 1, 1, 1, 1, 1}});
+
         static public Matrix<byte> verticalKernel5x5 = new Matrix<byte>(new byte[5, 5] {{ 0, 0, 1, 0, 0}, 
                                                                                         { 0, 0, 1, 0, 0}, 
                                                                                         { 0, 0, 1, 0, 0},
                                                                                         { 0, 0, 1, 0, 0}, 
                                                                                         { 0, 0, 1, 0, 0}});
 
-        static public Matrix<byte> fullKernel5x5 = new Matrix<byte>(new byte[5, 5] {    { 0, 1, 1, 1, 0}, 
-                                                                                        { 1, 1, 1, 1, 1}, 
-                                                                                        { 1, 1, 1, 1, 1},
-                                                                                        { 1, 1, 1, 1, 1}, 
-                                                                                        { 0, 1, 1, 1, 0}});
-
-        static public Matrix<byte> verLineKernel7x7 = new Matrix<byte>(new byte[7, 7] { { 0, 0, 0, 1, 0, 0, 0}, 
-                                                                                        { 0, 0, 0, 1, 0, 0, 0}, 
-                                                                                        { 0, 0, 0, 1, 0, 0, 0},
-                                                                                        { 0, 0, 0, 1, 0, 0, 0}, 
-                                                                                        { 0, 0, 0, 1, 0, 0, 0},
-                                                                                        { 0, 0, 0, 1, 0, 0, 0},
-                                                                                        { 0, 0, 0, 1, 0, 0, 0}});
-
-        static public Matrix<byte> fullLineKernel7x7 = new Matrix<byte>(new byte[7, 7] { { 1, 1, 1, 1, 1, 1, 1}, 
-                                                                                         { 1, 1, 1, 1, 1, 1, 1}, 
-                                                                                         { 1, 1, 1, 1, 1, 1, 1},
-                                                                                         { 1, 1, 1, 1, 1, 1, 1}, 
-                                                                                         { 1, 1, 1, 1, 1, 1, 1},
-                                                                                         { 1, 1, 1, 1, 1, 1, 1},
-                                                                                         { 1, 1, 1, 1, 1, 1, 1}});
-
-
         static public Matrix<byte> horizontalKernel5x5 = new Matrix<byte>(new byte[5, 5] {{ 0, 0, 0, 0, 0}, 
                                                                                           { 0, 0, 0, 0, 0}, 
                                                                                           { 1, 1, 1, 1, 1},
                                                                                           { 0, 0, 0, 0, 0}, 
                                                                                           { 0, 0, 0, 0, 0}});
+
+        static public Matrix<byte> diskKernel5x5 = new Matrix<byte>(new byte[5, 5] {{ 0, 1, 1, 1, 0}, 
+                                                                                    { 1, 1, 1, 1, 1}, 
+                                                                                    { 1, 1, 1, 1, 1},
+                                                                                    { 1, 1, 1, 1, 1}, 
+                                                                                    { 0, 1, 1, 1, 0}});
+
+        static public Matrix<byte> ringKernel5x5 = new Matrix<byte>(new byte[5, 5] {    { 0, 1, 1, 1, 0}, 
+                                                                                        { 1, 0, 0, 0, 1}, 
+                                                                                        { 1, 0, 0, 0, 1},
+                                                                                        { 1, 0, 0, 0, 1}, 
+                                                                                        { 0, 1, 1, 1, 0}});
+
+        static public Matrix<byte> verLineKernel7x7 = new Matrix<byte>(new byte[7, 7] {{ 0, 0, 0, 1, 0, 0, 0}, 
+                                                                                       { 0, 0, 0, 1, 0, 0, 0}, 
+                                                                                       { 0, 0, 0, 1, 0, 0, 0},
+                                                                                       { 0, 0, 0, 1, 0, 0, 0}, 
+                                                                                       { 0, 0, 0, 1, 0, 0, 0},
+                                                                                       { 0, 0, 0, 1, 0, 0, 0},
+                                                                                       { 0, 0, 0, 1, 0, 0, 0}});
+
+        static public Matrix<byte> boxKernel7x7 = new Matrix<byte>(new byte[7, 7] {{ 1, 1, 1, 1, 1, 1, 1}, 
+                                                                                   { 1, 1, 1, 1, 1, 1, 1}, 
+                                                                                   { 1, 1, 1, 1, 1, 1, 1},
+                                                                                   { 1, 1, 1, 1, 1, 1, 1}, 
+                                                                                   { 1, 1, 1, 1, 1, 1, 1},
+                                                                                   { 1, 1, 1, 1, 1, 1, 1},
+                                                                                   { 1, 1, 1, 1, 1, 1, 1}});
+
+
 
         //plates ~520x90
         static public double heightWidthFullRatio = 5.47;

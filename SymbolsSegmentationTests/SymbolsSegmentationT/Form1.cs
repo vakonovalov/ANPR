@@ -25,6 +25,8 @@ namespace SymbolsSegmentationT
 {
     public partial class Form1 : Form
     {
+        private int regPos = -1;
+
         public Form1()
         {
             InitializeComponent();
@@ -62,40 +64,139 @@ namespace SymbolsSegmentationT
             Image<Gray, Byte>[] symb = SymbolsSegmentation(plate);
 
             ImageList imgs = new ImageList();
-            imgs.ImageSize = new Size(40, 52);
-
-            //for (int i = 0; i < symb.Length; i++)
-            //{
-              //  imgs.Images.Add(symb[i].ToBitmap());
-            //}
+            imgs.ImageSize = new Size(28, 28);
 
             listView1.Items.Clear();
             listView1.LargeImageList = null;
             listView1.LargeImageList = imgs;
+            
+            double[] giss = null;
 
+            int pos = 0;
             for (int i = 0; i < symb.Length; i++)
             {
                 Image<Gray, Byte> img = symb[i].Clone();
+                pos += img.Width;
+
                 //symb[i]._EqualizeHist();
-                CvInvoke.GaussianBlur(img, img, new Size(0, 0), 7);
-                CvInvoke.AddWeighted(symb[i], 100.0, img, -99.0, 0, img);
-                CvInvoke.Threshold(img, img, 0, 255, ThresholdType.Otsu & ThresholdType.Binary);
-                img = NormalizeForPlateBorders(img, 10, 50, 0);
+                //CvInvoke.GaussianBlur(img, img, new Size(0, 0), 9);
+                //CvInvoke.AddWeighted(symb[i], 100.0, img, -99.0, 0, img);
+                //CvInvoke.Threshold(img, img, 0, 255, ThresholdType.Otsu & ThresholdType.Binary);
+                //img = NormalizeForPlateBorders(img, 10, 50, 0);
+                
+
+                //List<Rectangle> rects = Bwareaopen(img.Clone());
+                //img._SmoothGaussian(1);
+
+                //leftRight = ClarifyLeftRightLines(img.ToBitmap());
+
+                //border = CalculateLeftRightBorders(ref img, rects, leftRight);
+
+                //LineSegment2D verical = new LineSegment2D(new Point(leftRight[0], 0), new Point(leftRight[1], img.Height - 1));
+                //img.Draw(verical, new Gray(0), 1);
+
+                int cutPos = -1;
+
+                //right
+                giss = IntensityVerHist(img.Data, 0, img.Height - 1, img.Width / 2, img.Width - 1);
+
+
+                for (int j = 0; j < giss.Length; j++)
+                {
+                    if (giss[j] > 240)
+                    {
+                        cutPos = j;
+                        break;
+                    }
+                }
+
+                if (cutPos != -1)
+                {
+                    img = img.Copy(new Rectangle(0, 0, img.Width / 2 + cutPos, img.Height));
+                    img = img.Resize(28, 28, Inter.Nearest);
+                }
+
+                //left
+                giss = IntensityVerHist(img.Data, 0, img.Height - 1, 0, img.Width / 2);
+                cutPos = -1;
+
+                for (int j = 0; j < giss.Length; j++)
+                {
+                    if (giss[j] > 240)
+                    {
+                        cutPos = j;
+                    }
+                }
+
+                if (cutPos != -1)
+                {
+                    img = img.Copy(new Rectangle(cutPos, 0, img.Width - cutPos, img.Height - 1));
+                    img = img.Resize(28, 28, Inter.Nearest);
+                }
+
+                //down
+                giss = IntensityHorHist(img.Data, img.Height / 2, img.Height - 1, 0, img.Width - 1);
+                cutPos = -1;
+
+                for (int j = 0; j < giss.Length; j++)
+                {
+                    if (giss[j] > 240)
+                    {
+                        cutPos = j;
+                        break;
+                    }
+                }
+
+                if (cutPos != -1)
+                {
+                    img = img.Copy(new Rectangle(0, 0, img.Width, img.Height / 2 + cutPos));
+                    img = img.Resize(28, 28, Inter.Nearest);
+                }
+
+                
+                //up
+                giss = IntensityHorHist(img.Data, 0, img.Height / 2, 0, img.Width - 1);
+                cutPos = -1;
+
+                if (pos >= regPos)
+                {
+                    for (int j = 0; j < giss.Length; j++)
+                    {
+                        if (giss[j] > 240)
+                        {
+                            cutPos = j;
+                        }
+                    }
+                }
+                else                 
+                {
+                    for (int j = giss.Length - 1; j > 0; j--)
+                    {
+                        if (giss[j] > 220)
+                        {
+                            cutPos = j;
+                        }
+                    }              
+                }
+
+                if (cutPos != -1)
+                {
+                    img = img.Copy(new Rectangle(0, 0 + cutPos, img.Width - 1, img.Height - cutPos));
+                    img = img.Resize(28, 28, Inter.Nearest);
+                }  
+
                 img.Save("D:\\rez\\" + i.ToString() + ".bmp");
-                //CvInvoke.GaussianBlur(auxImg, auxSharpImg, new Size(0, 0), 9);
-               // CvInvoke.AddWeighted(auxImg, 100.0, auxSharpImg, -99.0, 0, auxSharpImg);
-
-               // CvInvoke.Threshold(auxSharpImg, auxSharpImg, 0, 255, ThresholdType.Otsu & ThresholdType.Binary);
-
-                //auxSharpImg = ConnectedCompsNoiseClearGray(auxSharpImg.Clone(), areaNormal, false, smooth);
-                //auxSharpImg = ConnectedCompsNoiseClearGray(auxSharpImg.Clone(), areaInvert, true, smooth);
-
                 imgs.Images.Add(img.ToBitmap());
                 ListViewItem item = new ListViewItem();
                 item.ImageIndex = i;
                 listView1.Items.Add(item);
-
             }
+
+            //BuildHist(xPoints, null);
+            //BuildHist(xPoints, null);
+            //BuildHist(xPoints, null);
+            //BuildHist(xPoints, null);
+
 
             sWatch.Stop();
             string sec1 = ((double)sWatch.ElapsedTicks / (double)Stopwatch.Frequency).ToString();
@@ -863,24 +964,37 @@ namespace SymbolsSegmentationT
             Image <Gray, Byte> auxSharpImg = cropPlate.Clone();
 
             int[] dersX = SymbolsPartition(auxImg);
+
+            Array.Sort(dersX);
+
+            for (int i = 0; i < dersX.Length; i++ )
+            {
+                if (dersX[i] > 0.65 * auxSharpImg.Width)
+                {
+                    regPos = dersX[i];
+                    break;
+                }
+            }
           
             CvInvoke.GaussianBlur(auxImg, auxSharpImg, new Size(0, 0), 9);
             CvInvoke.AddWeighted(auxImg, 100.0, auxSharpImg, -99.0, 0, auxSharpImg);
                        
             Image<Bgr, Byte> segmentsImage = new Image<Bgr, Byte>(auxSharpImg.Clone().ToBitmap());
-
+            
             for (int i = 0; i < dersX.Length; i++)
             {
                 LineSegment2D verical = new LineSegment2D(new Point(dersX[i], 0), new Point(dersX[i], segmentsImage.Height - 1));
                 segmentsImage.Draw(verical, new Bgr(0, 255, 0), 1);
             }
 
+            LineSegment2D verical1 = new LineSegment2D(new Point(regPos, 0), new Point(regPos, segmentsImage.Height - 1));
+            segmentsImage.Draw(verical1, new Bgr(255, 255, 0), 1);
+
             textBox1.Text = dersX.Length.ToString();
 
             if (checkBox2.CheckState == CheckState.Checked)
             {
-
-                imageBox4.Image = segmentsImage;// ShowPathes(auxSharpImg.Not(), segmentsImage, dersX);
+                imageBox4.Image = segmentsImage;
             }
             else
             {
@@ -910,10 +1024,17 @@ namespace SymbolsSegmentationT
 
             for (int i = 0; i < lns.Count - 1; i++)
             {
-                symbols[i + 1] = img.Copy(new Rectangle(lns[i], 0, lns[i + 1] - lns[i], img.Height));
+                if (lns[i] >= regPos)
+                {
+                    symbols[i + 1] = img.Copy(new Rectangle(lns[i], 0, lns[i + 1] - lns[i], (int)(img.Height * 0.7)));
+                }
+                else 
+                {
+                    symbols[i + 1] = img.Copy(new Rectangle(lns[i], 0, lns[i + 1] - lns[i], img.Height));
+                }
             }
 
-            symbols[lns.Count] = img.Copy(new Rectangle(lns[lns.Count - 1], 0, img.Width - lns[lns.Count - 1], img.Height));
+            symbols[lns.Count] = img.Copy(new Rectangle(lns[lns.Count - 1], 0, img.Width - lns[lns.Count - 1], (int)(img.Height * 0.7)));
 
             symbs = symbols.ToList();
 
@@ -925,34 +1046,49 @@ namespace SymbolsSegmentationT
                 }
             }
 
-            //resize all symbols to 40x52
             for (int i = 0; i < symbs.Count; i++)
             {
-                symbs[i] = symbs[i].Resize(40, 52, Inter.Cubic);
-                symbs[i] = symbs[i].MorphologyEx(MorphOp.Open, Resources.fullKernel5x5, new Point(-1, -1), 1, BorderType.Reflect, new MCvScalar(0));
-                //symbs[i]._EqualizeHist();
-                //CvInvoke.Threshold(symbs[i], symbs[i], 0, 255, ThresholdType.Otsu);
+                Image<Gray, Byte> source = symbs[i].Clone();
 
-                /*//symbs[i]._EqualizeHist();
-                Image<Gray, Byte> temp = symbs[i].Clone();
+                symbs[i]._EqualizeHist();
+    
+                double thresh = CvInvoke.Threshold(symbs[i], source, 0, 255, ThresholdType.Otsu | ThresholdType.Binary);
+                
+                double tr1  = CvInvoke.Threshold(symbs[i], symbs[i], thresh, 255, ThresholdType.Trunc);
+              
+                thresh = CvInvoke.Threshold(symbs[i], source, 0, 255, ThresholdType.Otsu | ThresholdType.Binary);
+                CvInvoke.Threshold(symbs[i], symbs[i], thresh, 255, ThresholdType.Otsu | ThresholdType.Binary);
 
-                CvInvoke.GaussianBlur(temp, symbs[i], new Size(0, 0), 19);
-                CvInvoke.AddWeighted(temp, 100.0, symbs[i], -99.0, 0, symbs[i]);
-                CvInvoke.Threshold(symbs[i], symbs[i], 0, 255, ThresholdType.Otsu);
-                //symbs[i] = ConnectedCompsNoiseClearGray(symbs[i].Clone(), 200, true, 0);
-                //symbs[i] = symbs[i].MorphologyEx(MorphOp.Dilate, Resources.diskKernel3x3, new Point(-1, -1), 1, BorderType.Reflect, new MCvScalar(0));
-                symbs[i] = ConnectedCompsNoiseClearGray(symbs[i].Clone(), 50, true, 0);
-                symbs[i] = symbs[i].MorphologyEx(MorphOp.Close, Resources.diskKernel3x3, new Point(-1, -1), 1, BorderType.Reflect, new MCvScalar(0));
-                symbs[i] = ConnectedComponentsDeleteAllExceptMax(symbs[i]);
-                */
+                double area = symbs[i].Width * symbs[i].Height * 0.02;
 
+                symbs[i] = ConnectedCompsNoiseClearGray(symbs[i].Clone(), (int)area, true, 0);
+
+                //symbs[i] = symbs[i].SmoothMedian(3);
+                //CvInvoke.MorphologyEx(symbs[i], symbs[i], MorphOp.Erode, Resources.verLineKernel3x3, new Point(-1, -1), 1, BorderType.Replicate, new MCvScalar(-3));
 
 
             }
-      
             return symbs.ToArray();
         }
-        
+
+        private Byte[] ImgToByteArray(Image<Gray, Byte> img)
+        {
+            Byte[] data = new Byte[img.Data.Length];
+
+            System.Buffer.BlockCopy(img.Data, 0, data, 0, img.Data.Length);
+            return data;
+        }
+
+        private Image<Gray, Byte> ByteArrayToImg(Byte[] data, int width, int height, Image<Gray, Byte> im, int channels = 1)
+        {
+            Byte[, ,] imgData = new Byte[height, width, channels];
+
+            System.Buffer.BlockCopy(data, 0, imgData, 0, data.Length - 1);
+
+            Image<Gray, Byte> img = new Image<Gray, Byte>(imgData);
+            return img;
+        }     
+                        
         public Image<Bgr, Byte> ShowHorizontalCroppedLines(Image<Gray, Byte> img, int[] upBot)
         {
             Image<Bgr, Byte> colorImg = new Image<Bgr, byte>(img.Clone().ToBitmap());

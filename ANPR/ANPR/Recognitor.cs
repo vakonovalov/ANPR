@@ -18,6 +18,7 @@ using System.Threading;
 using System.Drawing.Imaging;
 using Accord.MachineLearning.VectorMachines;
 using Accord.MachineLearning.VectorMachines.Learning;
+using System.Diagnostics;
 //using Accord.Statistics.Kernels;
 using FANNCSharp;
 #if FANN_FIXED
@@ -49,6 +50,7 @@ namespace ANPR
         private Thread backgroundThread;
         private static int lockFlag = 0;
         private PlateProcessor plateProcessor;
+        public string time = "";
 
         public Recognitor()
         {
@@ -152,7 +154,8 @@ namespace ANPR
             Image<Bgr, Byte> ROI_frame;
             Image<Bgr, Byte> origFrame;
             Rectangle[] platesDetected;
-
+            Stopwatch sWatch = new Stopwatch();
+            sWatch.Start();
             origFrame = currFrame;
             //origFrame.Save("./frames/" + frameCounter.ToString() + ".bmp");
 
@@ -168,8 +171,9 @@ namespace ANPR
             {
                 ROI_frame = origFrame.Copy(platesDetected[i]);
                 //origFrame.Draw(facesDetected2[i], new Bgr(Color.Blue), 2);
-                Image<Bgr, Byte> rotateImg = plateProcessor.ProcessPlate(ROI_frame.ToBitmap());//rotationPlate(ROI_frame);
-                MemBox.getDisplayForm().crop.Image = rotateImg;
+               // Image<Bgr, Byte> rotateImg = plateProcessor.ProcessPlate(ROI_frame.ToBitmap());//rotationPlate(ROI_frame);
+                MemBox.getDisplayForm().crop.Image = ROI_frame;//rotateImg;
+
                 //Image<Bgr, Byte> normImg = normalizePlate(rotateImg);
                 //MemBox.getDisplayForm().normBox.Image = normImg;
                 //normImg.Save("./plates/" + frameCounter.ToString() + "." + (i+1).ToString() + ".bmp");
@@ -181,6 +185,9 @@ namespace ANPR
             //            MulticlassSupportVectorMachine machine = MulticlassSupportVectorMachine.Load("MachineForSymbol");
             //            double[] input = BitmapToDouble(ROI_frame.ToBitmap()).ToArray();
             //            int output = machine.Compute(input);
+            sWatch.Stop();
+            time = ((double)sWatch.ElapsedTicks / (double)Stopwatch.Frequency).ToString();
+            int s = 1;
         }
 
         public void setState(int st)

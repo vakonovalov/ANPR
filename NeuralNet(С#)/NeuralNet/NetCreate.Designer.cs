@@ -105,7 +105,7 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(180, 158);
+            this.button2.Location = new System.Drawing.Point(337, 220);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(64, 23);
             this.button2.TabIndex = 11;
@@ -125,7 +125,7 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.dataGridView1);
             this.Name = "NetCreate";
-            this.Text = "NetCreate";
+            this.Text = "Интерфейс для тестирования распознающего алгоритма";
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

@@ -40,6 +40,8 @@ namespace NeuralNet
             textBox3.Enabled = false;
             textBox1.Text = @"C:\";
             textBox2.Text = @"C:\";
+            imageHeight.Text = "52";
+            imageWidth.Text = "40";
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -65,7 +67,10 @@ namespace NeuralNet
                 return;
             }
 
-            IdxFileParser trainParser = new IdxFileParser(textBox1.Text + "\\TraningSetImageFile.idx", 0, 40, 52);
+            int width = int.Parse(imageWidth.Text);
+            int height = int.Parse(imageHeight.Text);
+
+            IdxFileParser trainParser = new IdxFileParser(textBox1.Text + "\\TraningSetImageFile.idx", 0, width, height);
             IdxFileParser trainLabelParser = new IdxFileParser(textBox1.Text + "\\TraningSetLabelFile.idx");
             IdxFileParser testParser = null;
             IdxFileParser testLabelParser = null;
@@ -74,7 +79,7 @@ namespace NeuralNet
 
             if (checkBox1.Checked)
             {
-                testParser = new IdxFileParser(textBox1.Text + "\\TestSetImageFile.idx", 0, 40, 52);
+                testParser = new IdxFileParser(textBox1.Text + "\\TestSetImageFile.idx", 0, width, height);
                 testLabelParser = new IdxFileParser(textBox1.Text + "\\TestSetLabelFile.idx");                
                 percent = double.Parse(textBox3.Text) / 100.0;
                 bool check = (percent > 0 && percent <= 0.5);

@@ -93,7 +93,6 @@ namespace QualityControl
             return "";
         }
 
-
         public void initGrabber()
         {
             String source = getGrabberSource();

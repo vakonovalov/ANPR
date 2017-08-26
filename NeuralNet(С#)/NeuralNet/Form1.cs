@@ -35,6 +35,7 @@ namespace NeuralNet
          * 3 - TraningSetLabelFile
          */
         private String[] TrainFiles = null;
+        private String labels = "0123456789ABCЕНKMPTХУ";
         private double[][] inputTraining = null;
         private double[][] outputTraining = null;
         private double[][] inputTest = null;
@@ -109,11 +110,23 @@ namespace NeuralNet
         private void Open_Click(object sender, EventArgs e)
         {
             openFileDialog1.Filter = "Neural network files (*.nw)|*.nw|All files (*.*)|*.*";
+            if (!int.TryParse(clsCountBox.Text, out clsCount))
+            {
+                MessageBox.Show("Задано некорректное колличество классов");
+                return;
+            }
+
+            if (!int.TryParse(imageWidth.Text, out imgWidth) || !int.TryParse(imageHeight.Text, out imgHeight))
+            {
+                MessageBox.Show("Некорректный размер изображения");
+                return;
+            }
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 String strSrc = openFileDialog1.FileName;
                 network = NeuralNW.OpenNW(strSrc);
             }
+
         }
 
         private void save_Click(object sender, EventArgs e)
@@ -213,10 +226,29 @@ namespace NeuralNet
             openFileDialog1.Filter = "Bmp files (*.bmp)|*.bmp|All files (*.*)|*.*";
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
+                picture.Image = null;
                 String strSrc = openFileDialog1.FileName;
                 picture.Image = new Bitmap(strSrc);
             }
 
+        }
+
+        private Byte[] ImgToByteArray(Image<Gray, Byte> img)
+        {
+            Byte[] data = new Byte[img.Data.Length];
+
+            System.Buffer.BlockCopy(img.Data, 0, data, 0, img.Data.Length);
+            return data;
+        }
+
+        private Image<Gray, Byte> ByteArrayToImg(Byte[] data, int width, int height, int channels = 1)
+        {
+            Byte[,,] imgData = new Byte[height, width, channels];
+
+            System.Buffer.BlockCopy(data, 0, imgData, 0, data.Length);
+
+            Image<Gray, Byte> img = new Image<Gray, Byte>(imgData);
+            return img;
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -227,25 +259,25 @@ namespace NeuralNet
                 MessageBox.Show("Выберите изображение");
                 return;
             }
-                        
-            Image<Gray, Byte> img = new Image<Gray, Byte>(new Bitmap(picture.Image));
-            Byte[] data = new Byte[img.Data.Length];
-            double[] data1 = new double[img.Data.Length];
 
-            System.Buffer.BlockCopy(img.Data, 0, data, 0, img.Data.Length);
+            Image<Gray, Byte> img = new Image<Gray, Byte>(new Bitmap(picture.Image));
+
+            Byte[] data = ImgToByteArray(img);
+
+            double[] normData = new double[img.Data.Length];
 
             for (int j = 0; j < data.Length; j++)
             {
-                data1[j] = (data[j] / 255.0) - 0.5;
+                normData[j] = (data[j] / 255.0) - 0.5;
             }
 
-            network.CalculateOutput(data1);
-
+            network.CalculateOutput(normData);
             double[] res = network.NetOut();
 
             for (int i = 0; i < res.Length; i++)
             {
                 dataGridView1.Rows.Add(i, res[i].ToString("0.00000000"));
+                dataGridView1.Rows[i].Cells[0].Value = labels[i];
                 dataGridView1.Rows[i].Cells[1].Value = res[i].ToString("0.########");
             }
         }
